@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Charlie Marshall — 3D artist, modeller and visual designer." />
+    <title>Charlie Marshall — 3D Artist</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Back to the top">CM<span>.</span></a>
+    </header>
+
+    <main>
+      <section class="hero" id="top" aria-label="Charlie Marshall home page">
+        <div class="hero-art">
+          <img src="Mouse.png" alt="Temporary 3D character artwork placeholder" />
+        </div>
+        <div class="hero-intro">
+          <p class="hero-kicker">3D artist · modeller · designer</p>
+          <h1>Charlie Marshall</h1>
+          <ul class="hero-roles" aria-label="Roles">
+            <li>3D Artist</li>
+            <li>3D Modeller</li>
+            <li>Visual Designer</li>
+          </ul>
+        </div>
+        <div class="hero-tools" aria-label="Software">
+          <img src="Photoshop-logo.png" alt="Adobe Photoshop" />
+          <img src="Substance-painter-logo.png" alt="Adobe Substance 3D Painter" />
+          <img src="Blender-logo.png" alt="Blender" />
+        </div>
+      </section>
+
+      <section class="model-selection" id="models" aria-labelledby="models-title">
+        <aside class="model-menu">
+          <p class="menu-kicker">Choose a model</p>
+          <h2 id="models-title">Characters</h2>
+          <div class="model-list" role="list">
+            <button class="model-option is-active" type="button" data-model="Mouse" data-image="Mouse.png" data-wireframe="Mouse-wireframe.png" aria-pressed="true">
+              <span>Mouse</span>
+            </button>
+            <button class="model-option" type="button" data-model="Star eyes" data-image="Star-eyes.png" data-wireframe="Star-eyes-wireframe.png" aria-pressed="false">
+              <span>Star eyes</span>
+            </button>
+            <button class="model-option" type="button" data-model="Thinking face" data-image="Thinking-face.png" data-wireframe="Thinking-face-wireframe.png" aria-pressed="false">
+              <span>Thinking face</span>
+            </button>
+          </div>
+          <p class="menu-hint">Hover a name to explore</p>
+        </aside>
+        <div class="model-stage">
+          <div class="stage-copy">
+            <p class="stage-number">01 / 03</p>
+            <p class="stage-name" aria-live="polite">Mouse</p>
+          </div>
+          <div class="model-window">
+            <img class="carousel-model is-left" data-index="2" src="Thinking-face.png" alt="Thinking face model preview" />
+            <img class="carousel-model is-center" data-index="0" src="Mouse.png" alt="Mouse model preview" />
+            <img class="carousel-model is-right" data-index="1" src="Star-eyes.png" alt="Star eyes model preview" />
+          </div>
+        </div>
+      </section>
+
+      <section class="model-detail" id="model-detail" aria-labelledby="detail-title">
+        <div class="detail-copy">
+          <p class="menu-kicker">Model study</p>
+          <h2 id="detail-title">Mouse</h2>
+          <p class="detail-instruction">Drag the model left or right to rotate it.</p>
+          <button class="detail-back" type="button">Back to models</button>
+        </div>
+        <div class="detail-stage">
+          <img class="detail-model" src="Mouse.png" alt="Mouse model" draggable="false" />
+          <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
