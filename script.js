@@ -6,8 +6,11 @@ const stageName = document.querySelector(".stage-name");
 const stageNumber = document.querySelector(".stage-number");
 const modelSelection = document.querySelector(".model-selection");
 const modelDetail = document.querySelector(".model-detail");
+const modelViews = document.querySelector(".model-views");
 const detailTitle = document.querySelector("#detail-title");
 const detailModel = document.querySelector(".detail-model");
+const viewModel = document.querySelector(".view-model");
+const viewWireframe = document.querySelector(".view-wireframe");
 const detailBack = document.querySelector(".detail-back");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
 const hero = document.querySelector(".hero");
@@ -15,11 +18,51 @@ let pageScrollLocked = false;
 let touchStartY = 0;
 let goToPage = null;
 
+const animateElementScrollTo = (element, target) => {
+  const start = element.scrollTop;
+  const distance = target - start;
+  const duration = 1200;
+  const startTime = performance.now();
+
+  return new Promise((resolve) => {
+    const step = () => {
+      const now = performance.now();
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      element.scrollTop = start + distance * eased;
+
+      if (progress >= 1) {
+        window.clearInterval(animation);
+        element.scrollTop = target;
+        resolve();
+      }
+    };
+
+    const animation = window.setInterval(step, 16);
+  });
+};
+
+function updateCarousel(index) {
+  carouselModels.forEach((model) => {
+    const modelIndex = Number(model.dataset.index);
+    const distance = (modelIndex - index + modelOptions.length) % modelOptions.length;
+    model.src = modelOptions[modelIndex].dataset.image;
+    model.className = "carousel-model";
+    model.classList.add(distance === 0 ? "is-center" : distance === 1 ? "is-right" : "is-left");
+    model.alt = `${modelOptions[modelIndex].dataset.model} model preview`;
+  });
+}
+
+function highlightModel(option, highlighted) {
+  option.classList.toggle("is-active", highlighted);
+}
+
 function selectModel(option, index) {
   modelOptions.forEach((item) => {
-    const selected = item === option;
-    item.classList.toggle("is-active", selected);
-    item.setAttribute("aria-pressed", String(selected));
+    item.setAttribute("aria-pressed", String(item === option));
   });
 
   stageName.textContent = option.dataset.model;
@@ -29,26 +72,33 @@ function selectModel(option, index) {
   detailModel.alt = `${option.dataset.model} model`;
   detailModel.dataset.modelImage = option.dataset.image;
   detailModel.dataset.wireframeImage = option.dataset.wireframe;
+  viewModel.src = option.dataset.image;
+  viewModel.alt = `${option.dataset.model} rendered view`;
+  viewWireframe.src = option.dataset.wireframe;
+  viewWireframe.alt = `${option.dataset.model} wireframe view`;
   detailModel.classList.toggle("is-star", index === 1);
   detailModel.classList.toggle("is-thinking", index === 2);
   detailModel.classList.remove("is-wireframe");
   wireframeToggle?.setAttribute("aria-pressed", "false");
 
-  carouselModels.forEach((model) => {
-    const modelIndex = Number(model.dataset.index);
-    const distance = (modelIndex - index + modelOptions.length) % modelOptions.length;
-    model.className = "carousel-model";
-    model.classList.add(distance === 0 ? "is-center" : distance === 1 ? "is-right" : "is-left");
-    model.alt = `${modelOptions[modelIndex].dataset.model} model preview`;
-  });
+  updateCarousel(index);
 }
 
 modelOptions.forEach((option, index) => {
-  option.addEventListener("mouseenter", () => selectModel(option, index));
-  option.addEventListener("focus", () => selectModel(option, index));
+  option.addEventListener("mouseenter", () => {
+    highlightModel(option, true);
+    updateCarousel(index);
+  });
+  option.addEventListener("mouseleave", () => highlightModel(option, false));
+  option.addEventListener("focus", () => {
+    highlightModel(option, true);
+    selectModel(option, index);
+  });
   option.addEventListener("click", () => {
     selectModel(option, index);
-    modelDetail?.scrollIntoView({ behavior: "smooth", block: "start" });
+    pageScrollLocked = false;
+    if (modelDetail) modelDetail.scrollTop = 0;
+    document.body.classList.add("is-detail-active");
   });
 });
 
@@ -75,8 +125,30 @@ detailModel?.addEventListener("pointermove", (event) => {
 detailModel?.addEventListener("pointerup", () => detailModel.classList.remove("is-dragging"));
 detailModel?.addEventListener("pointercancel", () => detailModel.classList.remove("is-dragging"));
 detailBack?.addEventListener("click", () => {
+  document.body.classList.remove("is-detail-active");
   modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
+
+modelDetail?.addEventListener("wheel", (event) => {
+  if (!document.body.classList.contains("is-detail-active")) return;
+  event.preventDefault();
+
+  if (pageScrollLocked || !modelViews) return;
+
+  const page4Top = modelViews.offsetTop;
+  const atPage4 = modelDetail.scrollTop >= page4Top - 2;
+  const target = event.deltaY > 0 && !atPage4
+    ? page4Top
+    : event.deltaY < 0 && atPage4
+      ? 0
+      : null;
+
+  if (target === null) return;
+  pageScrollLocked = true;
+  animateElementScrollTo(modelDetail, target).then(() => {
+    pageScrollLocked = false;
+  });
+}, { passive: false });
 
 wireframeToggle?.addEventListener("click", () => {
   const showingWireframe = wireframeToggle.getAttribute("aria-pressed") === "true";
@@ -150,8 +222,8 @@ if (hero && modelSelection && modelDetail) {
     if (Math.abs(event.deltaY) < 8) return;
 
     const atHome = window.scrollY <= 2;
-    const atModels = window.scrollY >= modelSelection.offsetTop - 2 && window.scrollY < modelDetail.offsetTop - 2;
-    const atDetail = window.scrollY >= modelDetail.offsetTop - 2;
+    const atModels = window.scrollY >= modelSelection.offsetTop - 2;
+    const atDetail = document.body.classList.contains("is-detail-active");
 
     if (event.deltaY > 0 && atHome) {
       event.preventDefault();
@@ -161,7 +233,7 @@ if (hero && modelSelection && modelDetail) {
       return;
     } else if (event.deltaY < 0 && atDetail) {
       event.preventDefault();
-      goToPage(modelSelection);
+      return;
     } else if (event.deltaY < 0 && atModels) {
       event.preventDefault();
       goToPage(hero);
@@ -172,17 +244,23 @@ if (hero && modelSelection && modelDetail) {
     touchStartY = event.touches[0].clientY;
   }, { passive: true });
 
+  window.addEventListener("touchmove", (event) => {
+    const atDetail = window.scrollY >= modelDetail.offsetTop - 2;
+    const movingUp = event.touches[0].clientY > touchStartY;
+    if (atDetail && movingUp) event.preventDefault();
+  }, { passive: false });
+
   window.addEventListener("touchend", (event) => {
     const touchEndY = event.changedTouches[0].clientY;
     const swipeDistance = touchStartY - touchEndY;
     const atHome = window.scrollY <= 2;
-    const atModels = window.scrollY >= modelSelection.offsetTop - 2 && window.scrollY < modelDetail.offsetTop - 2;
-    const atDetail = window.scrollY >= modelDetail.offsetTop - 2;
+    const atModels = window.scrollY >= modelSelection.offsetTop - 2;
+    const atDetail = document.body.classList.contains("is-detail-active");
 
     if (Math.abs(swipeDistance) < 30) return;
     if (swipeDistance > 0 && atHome) goToPage(modelSelection);
     if (swipeDistance > 0 && atModels) return;
-    if (swipeDistance < 0 && atDetail) goToPage(modelSelection);
+    if (swipeDistance < 0 && atDetail) return;
     if (swipeDistance < 0 && atModels) goToPage(hero);
   }, { passive: true });
 }

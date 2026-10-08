@@ -16,7 +16,7 @@
     <main>
       <section class="hero" id="top" aria-label="Charlie Marshall home page">
         <div class="hero-art">
-          <img src="Mouse.png" alt="Temporary 3D character artwork placeholder" />
+          <img src="Images/Mouse.png" alt="Temporary 3D character artwork placeholder" />
         </div>
         <div class="hero-intro">
           <p class="hero-kicker">3D artist · modeller · designer</p>
@@ -28,9 +28,9 @@
           </ul>
         </div>
         <div class="hero-tools" aria-label="Software">
-          <img src="Photoshop-logo.png" alt="Adobe Photoshop" />
-          <img src="Substance-painter-logo.png" alt="Adobe Substance 3D Painter" />
-          <img src="Blender-logo.png" alt="Blender" />
+          <img src="Images/Photoshop-logo.png" alt="Adobe Photoshop" />
+          <img src="Images/Substance-Painter-logo.png" alt="Adobe Substance 3D Painter" />
+          <img src="Images/Blender-logo.png" alt="Blender" />
         </div>
       </section>
 
@@ -39,17 +39,17 @@
           <p class="menu-kicker">Choose a model</p>
           <h2 id="models-title">Characters</h2>
           <div class="model-list" role="list">
-            <button class="model-option is-active" type="button" data-model="Mouse" data-image="Mouse.png" data-wireframe="Mouse-wireframe.png" aria-pressed="true">
+            <button class="model-option" type="button" data-model="Mouse" data-image="Images/Mouse.png" data-wireframe="Images/Mouse-wireframe.png" aria-pressed="true">
               <span>Mouse</span>
             </button>
-            <button class="model-option" type="button" data-model="Star eyes" data-image="Star-eyes.png" data-wireframe="Star-eyes-wireframe.png" aria-pressed="false">
+            <button class="model-option" type="button" data-model="Star eyes" data-image="Images/Star-eyes.png" data-wireframe="Images/Star-eyes-wireframe.png" aria-pressed="false">
               <span>Star eyes</span>
             </button>
-            <button class="model-option" type="button" data-model="Thinking face" data-image="Thinking-face.png" data-wireframe="Thinking-face-wireframe.png" aria-pressed="false">
+            <button class="model-option" type="button" data-model="Thinking face" data-image="Images/Thinking-face.png" data-wireframe="Images/Thinking-face-wireframe.png" aria-pressed="false">
               <span>Thinking face</span>
             </button>
           </div>
-          <p class="menu-hint">Hover a name to explore</p>
+          <p class="menu-hint">Hover to preview · click to explore</p>
         </aside>
         <div class="model-stage">
           <div class="stage-copy">
@@ -57,23 +57,43 @@
             <p class="stage-name" aria-live="polite">Mouse</p>
           </div>
           <div class="model-window">
-            <img class="carousel-model is-left" data-index="2" src="Thinking-face.png" alt="Thinking face model preview" />
-            <img class="carousel-model is-center" data-index="0" src="Mouse.png" alt="Mouse model preview" />
-            <img class="carousel-model is-right" data-index="1" src="Star-eyes.png" alt="Star eyes model preview" />
+            <img class="carousel-model is-left" data-index="2" src="Images/Thinking-face.png" alt="Thinking face model preview" />
+            <img class="carousel-model is-center" data-index="0" src="Images/Mouse.png" alt="Mouse model preview" />
+            <img class="carousel-model is-right" data-index="1" src="Images/Star-eyes.png" alt="Star eyes model preview" />
           </div>
         </div>
       </section>
 
       <section class="model-detail" id="model-detail" aria-labelledby="detail-title">
-        <div class="detail-copy">
-          <p class="menu-kicker">Model study</p>
-          <h2 id="detail-title">Mouse</h2>
-          <p class="detail-instruction">Drag the model left or right to rotate it.</p>
-          <button class="detail-back" type="button">Back to models</button>
-        </div>
-        <div class="detail-stage">
-          <img class="detail-model" src="Mouse.png" alt="Mouse model" draggable="false" />
-          <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
+        <div class="detail-page">
+          <div class="detail-hero">
+            <div class="detail-copy">
+              <p class="menu-kicker">Model study</p>
+              <h2 id="detail-title">Mouse</h2>
+              <p class="detail-instruction">Drag the model left or right to rotate it.</p>
+              <button class="detail-back" type="button">Back to models</button>
+            </div>
+            <div class="detail-stage">
+              <img class="detail-model" src="Images/Mouse.png" alt="Mouse model" draggable="false" />
+              <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
+            </div>
+          </div>
+          <section class="model-views" id="model-views" aria-labelledby="views-title">
+            <div class="views-heading">
+              <p class="menu-kicker">Page 04 / Selected views</p>
+              <h3 id="views-title">Model details</h3>
+            </div>
+            <div class="views-grid">
+              <figure class="model-view model-view-main">
+                <img class="view-model" src="Images/Mouse.png" alt="Mouse rendered view" />
+                <figcaption>Rendered view</figcaption>
+              </figure>
+              <figure class="model-view model-view-wireframe">
+                <img class="view-wireframe" src="Images/Mouse-wireframe.png" alt="Mouse wireframe view" />
+                <figcaption>Wireframe view</figcaption>
+              </figure>
+            </div>
+          </section>
         </div>
       </section>
     </main>
