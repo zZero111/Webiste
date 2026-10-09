@@ -77,6 +77,20 @@ document.querySelectorAll("model-viewer").forEach((viewer) => {
 let pageScrollLocked = false;
 let touchStartY = 0;
 let goToPage = null;
+let selectedIndex = 0;
+
+// Trackpads keep sending wheel events for a moment after a swipe (momentum). After a page change,
+// wait for that stream to stop before the wheel can change page again, so one swipe moves one page.
+const wheelGestureGap = 200;
+let lastWheelTime = -Infinity;
+let waitForNewWheelGesture = false;
+
+function isNewWheelGesture(event) {
+  const gap = event.timeStamp - lastWheelTime;
+  lastWheelTime = event.timeStamp;
+  if (gap >= wheelGestureGap) waitForNewWheelGesture = false;
+  return !waitForNewWheelGesture;
+}
 
 const animateElementScrollTo = (element, target) => {
   const start = element.scrollTop;
@@ -131,7 +145,8 @@ function selectModel(option, index) {
   });
 
   stageName.textContent = option.dataset.model;
-  stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / 03`;
+  selectedIndex = index;
+  stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / ${String(modelOptions.length).padStart(2, "0")}`;
   detailTitle.textContent = option.dataset.model;
   const is3D = isModelFile(option.dataset.image);
   if (is3D) {
@@ -184,14 +199,34 @@ modelOptions.forEach((option, index) => {
     highlightModel(option, true);
     selectModel(option, index);
   });
+  option.addEventListener("blur", () => highlightModel(option, false));
   option.addEventListener("click", () => {
     selectModel(option, index);
     resetModelZoom();
-    pageScrollLocked = false;
-    if (modelDetail) modelDetail.scrollTop = 0;
-    document.body.classList.add("is-detail-active");
+    openDetail();
   });
 });
+
+// Hovering previews other models; moving off the list brings back the selected one.
+document.querySelector(".model-list")?.addEventListener("mouseleave", () => updateCarousel(selectedIndex));
+
+function openDetail() {
+  pageScrollLocked = false;
+  modelDetail.scrollTop = 0;
+  modelDetail.inert = false;
+  document.body.classList.add("is-detail-active");
+  detailBack?.focus({ preventScroll: true });
+}
+
+function closeDetail() {
+  document.body.classList.remove("is-detail-active");
+  modelDetail.inert = true;
+  modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
+  modelOptions[selectedIndex]?.focus({ preventScroll: true });
+}
+
+// The detail overlay is invisible until a model is opened, so keep it out of the tab order until then.
+if (modelDetail) modelDetail.inert = true;
 
 let rotation = 0;
 let dragStartX = 0;
@@ -216,9 +251,9 @@ detailModelImage?.addEventListener("pointermove", (event) => {
 
 detailModelImage?.addEventListener("pointerup", () => detailModelImage.classList.remove("is-dragging"));
 detailModelImage?.addEventListener("pointercancel", () => detailModelImage.classList.remove("is-dragging"));
-detailBack?.addEventListener("click", () => {
-  document.body.classList.remove("is-detail-active");
-  modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
+detailBack?.addEventListener("click", closeDetail);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("is-detail-active")) closeDetail();
 });
 
 // Scrolling over the 3D model zooms it: up zooms in, down zooms back out. Once it is fully
@@ -245,6 +280,13 @@ function handleModelZoom(event) {
     && event.target.closest(".detail-model");
   if (!overModel || modelDetail.scrollTop > 2) return false;
 
+  // Trackpad pinches arrive as ctrl+wheel with small deltas: always zoom, never change page.
+  if (event.ctrlKey) {
+    modelZoom = Math.min(1, Math.max(minModelZoom, modelZoom * Math.exp(event.deltaY * 0.01)));
+    applyModelZoom();
+    return true;
+  }
+
   // event.timeStamp is when the scroll happened, so a busy frame cannot split one gesture in two.
   const now = event.timeStamp;
   const sameGesture = now - lastZoomWheel < zoomGestureGap;
@@ -262,10 +304,15 @@ function handleModelZoom(event) {
 
 modelDetail?.addEventListener("wheel", (event) => {
   if (!document.body.classList.contains("is-detail-active")) return;
+  const newGesture = isNewWheelGesture(event);
+  if (handleModelZoom(event)) {
+    event.preventDefault();
+    return;
+  }
+  if (event.ctrlKey) return; // let the browser zoom the page
   event.preventDefault();
 
-  if (pageScrollLocked || !modelViews) return;
-  if (handleModelZoom(event)) return;
+  if (pageScrollLocked || !newGesture || Math.abs(event.deltaY) < 8 || !modelViews) return;
 
   const pageStops = [0, modelViews.offsetTop];
   if (modelMaterials) pageStops.push(modelMaterials.offsetTop);
@@ -279,6 +326,7 @@ modelDetail?.addEventListener("wheel", (event) => {
 
   if (target === null) return;
   pageScrollLocked = true;
+  waitForNewWheelGesture = true;
   animateElementScrollTo(modelDetail, target).then(() => {
     pageScrollLocked = false;
   });
@@ -343,62 +391,47 @@ if (hero && modelSelection && modelDetail) {
   };
 
   goToPage = (page) => {
-    if (pageScrollLocked) return;
+    if (pageScrollLocked || Math.abs(window.scrollY - page.offsetTop) <= 2) return;
 
     pageScrollLocked = true;
+    waitForNewWheelGesture = true;
     animateScrollTo(page.offsetTop).then(() => {
       pageScrollLocked = false;
     });
   };
 
+  // The home and model pages move one whole page at a time, so the browser never scrolls them by hand.
   window.addEventListener("wheel", (event) => {
-    if (pageScrollLocked) {
-      event.preventDefault();
-      return;
-    }
+    if (document.body.classList.contains("is-detail-active") || event.ctrlKey) return;
+    event.preventDefault();
 
-    if (Math.abs(event.deltaY) < 8) return;
-
-    const atHome = window.scrollY <= 2;
-    const atModels = window.scrollY >= modelSelection.offsetTop - 2;
-    const atDetail = document.body.classList.contains("is-detail-active");
-
-    if (event.deltaY > 0 && atHome) {
-      event.preventDefault();
-      goToPage(modelSelection);
-    } else if (event.deltaY > 0 && atModels) {
-      event.preventDefault();
-      return;
-    } else if (event.deltaY < 0 && atDetail) {
-      event.preventDefault();
-      return;
-    } else if (event.deltaY < 0 && atModels) {
-      event.preventDefault();
-      goToPage(hero);
-    }
+    const newGesture = isNewWheelGesture(event);
+    if (pageScrollLocked || !newGesture || Math.abs(event.deltaY) < 8) return;
+    goToPage(event.deltaY > 0 ? modelSelection : hero);
   }, { passive: false });
+
+  window.addEventListener("keydown", (event) => {
+    if (document.body.classList.contains("is-detail-active") || event.target.closest?.("button, a, input, textarea")) return;
+    const down = ["ArrowDown", "PageDown", " "].includes(event.key);
+    const up = ["ArrowUp", "PageUp"].includes(event.key);
+    if (!down && !up) return;
+    event.preventDefault();
+    goToPage(down ? modelSelection : hero);
+  });
 
   window.addEventListener("touchstart", (event) => {
     touchStartY = event.touches[0].clientY;
   }, { passive: true });
 
   window.addEventListener("touchmove", (event) => {
-    const atDetail = window.scrollY >= modelDetail.offsetTop - 2;
-    const movingUp = event.touches[0].clientY > touchStartY;
-    if (atDetail && movingUp) event.preventDefault();
+    // Swipes change page on touchend; the detail overlay scrolls normally.
+    if (!document.body.classList.contains("is-detail-active") && event.cancelable) event.preventDefault();
   }, { passive: false });
 
   window.addEventListener("touchend", (event) => {
-    const touchEndY = event.changedTouches[0].clientY;
-    const swipeDistance = touchStartY - touchEndY;
-    const atHome = window.scrollY <= 2;
-    const atModels = window.scrollY >= modelSelection.offsetTop - 2;
-    const atDetail = document.body.classList.contains("is-detail-active");
-
+    if (document.body.classList.contains("is-detail-active")) return;
+    const swipeDistance = touchStartY - event.changedTouches[0].clientY;
     if (Math.abs(swipeDistance) < 30) return;
-    if (swipeDistance > 0 && atHome) goToPage(modelSelection);
-    if (swipeDistance > 0 && atModels) return;
-    if (swipeDistance < 0 && atDetail) return;
-    if (swipeDistance < 0 && atModels) goToPage(hero);
+    goToPage(swipeDistance > 0 ? modelSelection : hero);
   }, { passive: true });
 }

@@ -34,6 +34,7 @@ body.is-detail-active { overflow: hidden; }
 
 .hero {
   align-items: center;
+  position: relative;
   display: grid;
   grid-template-columns: 44% 56%;
   height: 100svh;
@@ -260,7 +261,7 @@ body.is-detail-active { overflow: hidden; }
 .is-hidden { display: none !important; }
 
 .detail-model-image.is-star { max-height: 91%; max-width: 91%; }
-.detail-model-image.is-thinking { max-height: 110%; max-width: 110%; width: min(100%, 900px); }
+.detail-model-image.is-thinking { width: min(60%, 520px); }
 
 .detail-model-image.is-dragging { cursor: grabbing; }
 
@@ -422,9 +423,15 @@ body.is-detail-active { overflow: hidden; }
   line-height: .9;
 }
 
+.model-option[aria-pressed="true"] { color: var(--yellow); }
 .model-option:hover, .model-option:focus-visible, .model-option.is-active { color: var(--yellow); transform: translateX(8px); }
 .model-option:focus-visible { outline: 1px solid var(--yellow); outline-offset: 8px; }
 .menu-hint { margin-top: 70px; }
+.hint-touch { display: none; }
+@media (hover: none) {
+  .hint-pointer { display: none; }
+  .hint-touch { display: inline; }
+}
 
 .model-stage {
   background: var(--purple);
@@ -450,7 +457,6 @@ body.is-detail-active { overflow: hidden; }
 .carousel-model {
   background: transparent;
   height: 68%;
-  left: 50%;
   left: 50%;
   max-width: none;
   object-fit: contain;
@@ -517,7 +523,7 @@ body.is-detail-active { overflow: hidden; }
   .detail-stage { min-height: 0; }
   .detail-model-image { max-height: 68%; max-width: 82%; }
   .detail-model-image.is-star { max-height: 80%; max-width: 94%; }
-  .detail-model-image.is-thinking { max-height: 98%; max-width: 98%; width: 98%; }
+  .detail-model-image.is-thinking { width: 80%; }
   .wireframe-toggle { bottom: 18px; right: 8vw; }
   .model-views { height: auto; min-height: 100svh; padding: 70px 5vw 90px; }
   .views-grid { grid-template-columns: 1fr; }
