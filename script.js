@@ -263,16 +263,89 @@ const zoomGestureGap = 400;
 let modelZoom = 1;
 let lastZoomWheel = 0;
 
+// Zooming aims at the pointer: the camera's look-at point slides toward whatever is under the
+// cursor (or between the two fingers), so that spot stays put on screen while the model grows.
+let defaultTarget = null;   // where the camera looks when fully zoomed out (the model's centre)
+let zoomedOutRadius = 0;    // camera distance at modelZoom = 1
+let modelPan = { x: 0, y: 0, z: 0 };
+
 function applyModelZoom() {
   const orbit = detailModel.getCameraOrbit?.();
   if (!orbit) return;
   detailModel.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${(modelZoom * 135).toFixed(1)}%`;
+  if (defaultTarget) {
+    const x = defaultTarget.x + modelPan.x;
+    const y = defaultTarget.y + modelPan.y;
+    const z = defaultTarget.z + modelPan.z;
+    detailModel.cameraTarget = `${x}m ${y}m ${z}m`;
+  }
+}
+
+// Change the zoom, keeping the point under (clientX, clientY) fixed on screen.
+function setModelZoom(newZoom, clientX, clientY) {
+  const previous = modelZoom;
+  modelZoom = Math.min(1, Math.max(minModelZoom, newZoom));
+  if (modelZoom === previous) return;
+
+  const orbit = detailModel.getCameraOrbit?.();
+  const rect = detailModel.getBoundingClientRect();
+  if (!orbit || !defaultTarget || !zoomedOutRadius || !rect.width || !rect.height) {
+    applyModelZoom();
+    return;
+  }
+
+  if (modelZoom > previous) {
+    // Zooming out drifts back to the centre, arriving exactly there when fully zoomed out.
+    const was = (1 - previous) / (1 - minModelZoom);
+    const now = (1 - modelZoom) / (1 - minModelZoom);
+    const keep = was > 0 ? now / was : 0;
+    modelPan = { x: modelPan.x * keep, y: modelPan.y * keep, z: modelPan.z * keep };
+  } else {
+    // Camera axes from the orbit angles (theta around the vertical axis, phi down from the top).
+    const sinPhi = Math.sin(orbit.phi);
+    const dir = [sinPhi * Math.sin(orbit.theta), Math.cos(orbit.phi), sinPhi * Math.cos(orbit.theta)];
+    let right = [dir[2], 0, -dir[0]];
+    const rightLength = Math.hypot(...right) || 1;
+    right = right.map((value) => value / rightLength);
+    const up = [
+      dir[1] * right[2] - dir[2] * right[1],
+      dir[2] * right[0] - dir[0] * right[2],
+      dir[0] * right[1] - dir[1] * right[0],
+    ];
+
+    // How far the pointer is from the screen centre, in world units at the distance of the target.
+    const halfHeight = Math.tan((detailModel.getFieldOfView() * Math.PI / 180) / 2) * zoomedOutRadius * previous;
+    const ndcX = ((clientX - rect.left) / rect.width - 0.5) * 2;
+    const ndcY = -((clientY - rect.top) / rect.height - 0.5) * 2;
+    const offsetX = ndcX * halfHeight * (rect.width / rect.height);
+    const offsetY = ndcY * halfHeight;
+    const slide = 1 - modelZoom / previous;
+    modelPan.x += (right[0] * offsetX + up[0] * offsetY) * slide;
+    modelPan.y += (right[1] * offsetX + up[1] * offsetY) * slide;
+    modelPan.z += (right[2] * offsetX + up[2] * offsetY) * slide;
+  }
+  applyModelZoom();
 }
 
 function resetModelZoom() {
   modelZoom = 1;
+  modelPan = { x: 0, y: 0, z: 0 };
   if (detailModel.loaded) applyModelZoom();
 }
+
+// Remember the framing the viewer chose for the model, once it has loaded.
+function captureModelFraming() {
+  modelPan = { x: 0, y: 0, z: 0 };
+  const target = detailModel.getCameraTarget();
+  defaultTarget = { x: target.x, y: target.y, z: target.z };
+  detailModel.cameraOrbit = `0deg 75deg ${(modelZoom * 135).toFixed(1)}%`;
+  detailModel.jumpCameraToGoal();
+  zoomedOutRadius = detailModel.getCameraOrbit().radius / modelZoom;
+  applyModelZoom();
+}
+
+detailModel?.addEventListener("load", captureModelFraming);
+if (detailModel?.loaded) captureModelFraming();
 
 // Two-finger pinch on touch screens: fingers apart zooms in, together zooms out. One finger still
 // rotates the model and swiping up or down still changes page.
@@ -294,8 +367,8 @@ detailModel?.addEventListener("touchmove", (event) => {
   if (event.touches.length !== 2 || !pinchStartDistance) return;
   if (event.cancelable) event.preventDefault();
   const ratio = pinchStartDistance / (touchDistance(event.touches) || 1);
-  modelZoom = Math.min(1, Math.max(minModelZoom, pinchStartZoom * ratio));
-  applyModelZoom();
+  const [a, b] = event.touches;
+  setModelZoom(pinchStartZoom * ratio, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
 }, { passive: false });
 
 const endPinch = (event) => {
@@ -312,8 +385,7 @@ function handleModelZoom(event) {
 
   // Trackpad pinches arrive as ctrl+wheel with small deltas: always zoom, never change page.
   if (event.ctrlKey) {
-    modelZoom = Math.min(1, Math.max(minModelZoom, modelZoom * Math.exp(event.deltaY * 0.01)));
-    applyModelZoom();
+    setModelZoom(modelZoom * Math.exp(event.deltaY * 0.01), event.clientX, event.clientY);
     return true;
   }
 
@@ -327,8 +399,7 @@ function handleModelZoom(event) {
 
   lastZoomWheel = now;
   const delta = event.deltaMode === 1 ? event.deltaY * 33 : event.deltaY;
-  modelZoom = Math.min(1, Math.max(minModelZoom, modelZoom * Math.exp(delta * 0.0015)));
-  applyModelZoom();
+  setModelZoom(modelZoom * Math.exp(delta * 0.0015), event.clientX, event.clientY);
   return true;
 }
 
