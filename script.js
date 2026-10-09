@@ -18,6 +18,61 @@ const viewWireframeImage = document.querySelector(".view-wireframe-image");
 const detailBack = document.querySelector(".detail-back");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
 const hero = document.querySelector(".hero");
+const isModelFile = (src) => /\.(glb|gltf)$/i.test(src);
+
+// Browsers block fetching model files from file:// pages, so fall back to the embedded copy there.
+const resolveModelSrc = (src) => (location.protocol === "file:" && window.EMBEDDED_MODELS?.[src]) || src;
+
+const setModelSrc = (viewer, src) => {
+  const resolved = resolveModelSrc(src);
+  if (viewer.getAttribute("src") !== resolved) viewer.setAttribute("src", resolved);
+};
+
+const wireframeColor = { r: 1, g: 223 / 255, b: 62 / 255 };
+
+function setModelWireframe(viewer, enabled) {
+  viewer.dataset.wireframe = String(enabled);
+  const sceneKey = Object.getOwnPropertySymbols(viewer).find((key) => key.description === "scene");
+  const scene = sceneKey && viewer[sceneKey];
+  if (!scene || !viewer.loaded) return;
+
+  scene.traverse((object) => {
+    if (!object.isMesh) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    materials.forEach((material) => {
+      if (!material.userData.original) {
+        material.userData.original = {
+          color: material.color?.clone(),
+          emissive: material.emissive?.clone(),
+          metalness: material.metalness,
+          roughness: material.roughness,
+        };
+      }
+      const original = material.userData.original;
+      material.wireframe = enabled;
+      if (enabled) {
+        material.color?.setRGB(0, 0, 0);
+        material.emissive?.setRGB(wireframeColor.r, wireframeColor.g, wireframeColor.b);
+        material.metalness = 0;
+        material.roughness = 1;
+      } else {
+        if (original.color) material.color.copy(original.color);
+        if (original.emissive) material.emissive.copy(original.emissive);
+        material.metalness = original.metalness;
+        material.roughness = original.roughness;
+      }
+      material.needsUpdate = true;
+    });
+  });
+  scene.queueRender?.();
+}
+
+document.querySelectorAll("model-viewer").forEach((viewer) => {
+  setModelSrc(viewer, viewer.getAttribute("src"));
+  viewer.addEventListener("load", () => setModelWireframe(viewer, viewer.dataset.wireframe === "true"));
+  viewer.addEventListener("error", (event) => console.error("Model failed to load:", viewer.getAttribute("src"), event.detail));
+});
+
 let pageScrollLocked = false;
 let touchStartY = 0;
 let goToPage = null;
@@ -53,10 +108,15 @@ function updateCarousel(index) {
   carouselModels.forEach((model) => {
     const modelIndex = Number(model.dataset.index);
     const distance = (modelIndex - index + modelOptions.length) % modelOptions.length;
-    model.src = modelOptions[modelIndex].dataset.image;
+    const image = modelOptions[modelIndex].dataset.image;
+    if (model.tagName === "MODEL-VIEWER") {
+      if (isModelFile(image)) setModelSrc(model, image);
+    } else {
+      model.src = image;
+    }
     model.className = "carousel-model";
     model.classList.add(distance === 0 ? "is-center" : distance === 1 ? "is-right" : "is-left");
-    model.alt = `${modelOptions[modelIndex].dataset.model} model preview`;
+    model.setAttribute("alt", `${modelOptions[modelIndex].dataset.model} model preview`);
   });
 }
 
@@ -72,31 +132,37 @@ function selectModel(option, index) {
   stageName.textContent = option.dataset.model;
   stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / 03`;
   detailTitle.textContent = option.dataset.model;
-  const isScythe = /\.(glb|gltf)$/i.test(option.dataset.image);
-  if (isScythe) {
-    detailModel.src = option.dataset.image;
-    viewModel.src = option.dataset.image;
-    viewWireframe.src = option.dataset.wireframe;
+  const is3D = isModelFile(option.dataset.image);
+  if (is3D) {
+    setModelSrc(detailModel, option.dataset.image);
+    setModelSrc(viewModel, option.dataset.image);
+    setModelSrc(viewWireframe, option.dataset.wireframe);
+    detailModel.setAttribute("alt", `${option.dataset.model} model`);
+    viewModel.setAttribute("alt", `${option.dataset.model} rendered view`);
+    viewWireframe.setAttribute("alt", `${option.dataset.model} wireframe view`);
+    setModelWireframe(detailModel, false);
+    setModelWireframe(viewWireframe, true);
+  } else {
+    detailModelImage.src = option.dataset.image;
+    detailModelImage.alt = `${option.dataset.model} model`;
+    viewModelImage.src = option.dataset.image;
+    viewModelImage.alt = `${option.dataset.model} rendered view`;
+    viewWireframeImage.src = option.dataset.wireframe;
+    viewWireframeImage.alt = `${option.dataset.model} wireframe view`;
   }
-  detailModel.alt = `${option.dataset.model} model`;
-  detailModelImage.src = option.dataset.image;
-  detailModelImage.alt = `${option.dataset.model} model`;
-  detailModel.dataset.modelImage = option.dataset.image;
-  detailModel.dataset.wireframeImage = option.dataset.wireframe;
-  viewModel.alt = `${option.dataset.model} rendered view`;
-  viewModelImage.src = option.dataset.image;
-  viewModelImage.alt = `${option.dataset.model} rendered view`;
-  viewWireframe.alt = `${option.dataset.model} wireframe view`;
-  viewWireframeImage.src = option.dataset.wireframe;
-  viewWireframeImage.alt = `${option.dataset.model} wireframe view`;
-  detailModel.classList.toggle("is-hidden", !isScythe);
-  detailModelImage.classList.toggle("is-hidden", isScythe);
-  viewModel.classList.toggle("is-hidden", !isScythe);
-  viewModelImage.classList.toggle("is-hidden", isScythe);
-  viewWireframe.classList.toggle("is-hidden", !isScythe);
-  viewWireframeImage.classList.toggle("is-hidden", isScythe);
-  detailModel.classList.toggle("is-star", index === 1);
-  detailModel.classList.toggle("is-thinking", index === 2);
+  detailModelImage.dataset.modelImage = option.dataset.image;
+  detailModelImage.dataset.wireframeImage = option.dataset.wireframe;
+  detailModel.classList.toggle("is-hidden", !is3D);
+  detailModelImage.classList.toggle("is-hidden", is3D);
+  viewModel.classList.toggle("is-hidden", !is3D);
+  viewModelImage.classList.toggle("is-hidden", is3D);
+  viewWireframe.classList.toggle("is-hidden", !is3D);
+  viewWireframeImage.classList.toggle("is-hidden", is3D);
+  detailModelImage.classList.toggle("is-star", index === 1);
+  detailModelImage.classList.toggle("is-thinking", index === 2);
+  detailModelImage.classList.remove("is-wireframe");
+  rotation = 0;
+  detailModelImage.style.transform = "";
   wireframeToggle?.setAttribute("aria-pressed", "false");
 
   updateCarousel(index);
@@ -120,28 +186,29 @@ modelOptions.forEach((option, index) => {
   });
 });
 
-selectModel(modelOptions[0], 0);
-
 let rotation = 0;
 let dragStartX = 0;
 let rotationStart = 0;
 
-detailModel?.addEventListener("pointerdown", (event) => {
-  detailModel.classList.add("is-dragging");
-  detailModel.setPointerCapture(event.pointerId);
+selectModel(modelOptions[0], 0);
+
+// Flat images fake rotation by squashing; 3D models orbit with model-viewer's camera controls.
+detailModelImage?.addEventListener("pointerdown", (event) => {
+  detailModelImage.classList.add("is-dragging");
+  detailModelImage.setPointerCapture(event.pointerId);
   dragStartX = event.clientX;
   rotationStart = rotation;
 });
 
-detailModel?.addEventListener("pointermove", (event) => {
-  if (!detailModel.classList.contains("is-dragging")) return;
+detailModelImage?.addEventListener("pointermove", (event) => {
+  if (!detailModelImage.classList.contains("is-dragging")) return;
   rotation = rotationStart + (event.clientX - dragStartX) * .65;
   const facing = Math.cos(rotation * Math.PI / 180);
-  detailModel.style.transform = `rotateY(${rotation}deg) scaleX(${Math.max(.16, Math.abs(facing))})`;
+  detailModelImage.style.transform = `rotateY(${rotation}deg) scaleX(${Math.max(.16, Math.abs(facing))})`;
 });
 
-detailModel?.addEventListener("pointerup", () => detailModel.classList.remove("is-dragging"));
-detailModel?.addEventListener("pointercancel", () => detailModel.classList.remove("is-dragging"));
+detailModelImage?.addEventListener("pointerup", () => detailModelImage.classList.remove("is-dragging"));
+detailModelImage?.addEventListener("pointercancel", () => detailModelImage.classList.remove("is-dragging"));
 detailBack?.addEventListener("click", () => {
   document.body.classList.remove("is-detail-active");
   modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -173,9 +240,13 @@ modelDetail?.addEventListener("wheel", (event) => {
 wireframeToggle?.addEventListener("click", () => {
   const showingWireframe = wireframeToggle.getAttribute("aria-pressed") === "true";
   wireframeToggle.setAttribute("aria-pressed", String(!showingWireframe));
+  if (!detailModel.classList.contains("is-hidden")) {
+    setModelWireframe(detailModel, !showingWireframe);
+    return;
+  }
   detailModelImage.src = showingWireframe
-    ? detailModel.dataset.modelImage
-    : detailModel.dataset.wireframeImage;
+    ? detailModelImage.dataset.modelImage
+    : detailModelImage.dataset.wireframeImage;
   detailModelImage.classList.toggle("is-wireframe", !showingWireframe);
 });
 

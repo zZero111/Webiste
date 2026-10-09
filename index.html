@@ -6,8 +6,9 @@
     <meta name="description" content="Charlie Marshall — 3D artist, modeller and visual designer." />
     <title>Charlie Marshall — 3D Artist</title>
     <link rel="stylesheet" href="styles.css" />
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+    <script src="Images/scythe-model.js" defer></script>
     <script src="script.js" defer></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -17,7 +18,7 @@
     <main>
       <section class="hero" id="top" aria-label="Charlie Marshall home page">
         <div class="hero-art">
-          <model-viewer src="Images/scythe.gltf" alt="Scythe 3D model" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+          <model-viewer src="Images/scythe.glb" alt="Scythe 3D model" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
         </div>
         <div class="hero-intro">
           <p class="hero-kicker">3D artist · modeller · designer</p>
@@ -30,7 +31,7 @@
         </div>
         <div class="hero-tools" aria-label="Software">
           <img src="Images/Photoshop-logo.png" alt="Adobe Photoshop" />
-          <img src="Images/Substance-Painter-logo.png" alt="Adobe Substance 3D Painter" />
+          <img src="Images/Substance-painter-logo.png" alt="Adobe Substance 3D Painter" />
           <img src="Images/Blender-logo.png" alt="Blender" />
         </div>
       </section>
@@ -40,7 +41,7 @@
           <p class="menu-kicker">Choose a model</p>
           <h2 id="models-title">Characters</h2>
           <div class="model-list" role="list">
-            <button class="model-option" type="button" data-model="Scythe" data-image="Images/scythe.gltf" data-wireframe="Images/scythe.gltf" aria-pressed="true">
+            <button class="model-option" type="button" data-model="Scythe" data-image="Images/scythe.glb" data-wireframe="Images/scythe.glb" aria-pressed="true">
               <span>Scythe</span>
             </button>
             <button class="model-option" type="button" data-model="Star eyes" data-image="Images/Star-eyes.png" data-wireframe="Images/Star-eyes-wireframe.png" aria-pressed="false">
@@ -59,7 +60,7 @@
           </div>
           <div class="model-window">
             <img class="carousel-model is-left" data-index="2" src="Images/Thinking-face.png" alt="Thinking face model preview" />
-            <model-viewer class="carousel-model is-center" data-index="0" src="Images/scythe.gltf" alt="Scythe model preview" loading="eager"></model-viewer>
+            <model-viewer class="carousel-model is-center" data-index="0" src="Images/scythe.glb" alt="Scythe model preview" loading="eager"></model-viewer>
             <img class="carousel-model is-right" data-index="1" src="Images/Star-eyes.png" alt="Star eyes model preview" />
           </div>
         </div>
@@ -75,7 +76,7 @@
               <button class="detail-back" type="button">Back to models</button>
             </div>
             <div class="detail-stage">
-              <model-viewer class="detail-model" src="Images/scythe.gltf" alt="Scythe model" loading="eager" camera-controls camera-target="8.7m 2.6m 0m" shadow-intensity="1"></model-viewer>
+              <model-viewer class="detail-model" src="Images/scythe.glb" alt="Scythe model" loading="eager" camera-controls disable-zoom disable-pan touch-action="pan-y" interaction-prompt="none" shadow-intensity="1"></model-viewer>
               <img class="detail-model-image is-hidden" src="Images/Star-eyes.png" alt="Star eyes model" draggable="false" />
               <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
             </div>
@@ -87,12 +88,12 @@
             </div>
             <div class="views-grid">
               <figure class="model-view model-view-main">
-                <model-viewer class="view-model-3d" src="Images/scythe.gltf" alt="Scythe model view" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                <model-viewer class="view-model-3d" src="Images/scythe.glb" alt="Scythe model view" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
                 <img class="view-model-image is-hidden" src="Images/Star-eyes.png" alt="Star eyes rendered view" />
                 <figcaption>Rendered view</figcaption>
               </figure>
               <figure class="model-view model-view-wireframe">
-                <model-viewer class="view-wireframe-3d" src="Images/scythe.gltf" alt="Scythe model view" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                <model-viewer class="view-wireframe-3d" src="Images/scythe.glb" alt="Scythe model view" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
                 <img class="view-wireframe-image is-hidden" src="Images/Star-eyes-wireframe.png" alt="Star eyes wireframe view" />
                 <figcaption>Wireframe view</figcaption>
               </figure>

@@ -241,13 +241,6 @@ body.is-detail-active { overflow: hidden; }
 .detail-model {
   cursor: grab;
   height: 78%;
-  max-height: 78%;
-  max-width: 78%;
-  object-fit: contain;
-  transform: rotateY(0deg) scaleX(1);
-  transform-style: preserve-3d;
-  user-select: none;
-  will-change: transform;
   width: 78%;
 }
 
@@ -256,15 +249,18 @@ body.is-detail-active { overflow: hidden; }
   max-height: 78%;
   max-width: 78%;
   object-fit: contain;
+  transform: rotateY(0deg) scaleX(1);
+  transform-style: preserve-3d;
   user-select: none;
+  will-change: transform;
 }
 
 .is-hidden { display: none !important; }
 
-.detail-model.is-star { max-height: 91%; max-width: 91%; }
-.detail-model.is-thinking { max-height: 110%; max-width: 110%; width: min(100%, 900px); }
+.detail-model-image.is-star { max-height: 91%; max-width: 91%; }
+.detail-model-image.is-thinking { max-height: 110%; max-width: 110%; width: min(100%, 900px); }
 
-.detail-model.is-dragging { cursor: grabbing; }
+.detail-model-image.is-dragging { cursor: grabbing; }
 
 .wireframe-toggle {
   background: #211e22;
@@ -361,7 +357,7 @@ body.is-detail-active { overflow: hidden; }
   width: 100%;
 }
 
-.model-view-image, .view-wireframe-image {
+.view-model-image, .view-wireframe-image {
   height: 100%;
   object-fit: contain;
   width: 100%;
@@ -517,10 +513,10 @@ body.is-detail-active { overflow: hidden; }
   .detail-copy { padding: 78px 10vw 14px; }
   .detail-copy h2 { font-size: 4.5rem; }
   .detail-stage { min-height: 0; }
-  .detail-model { max-height: 68%; max-width: 82%; }
+  .detail-model { height: 82%; width: 92%; }
   .detail-model-image { max-height: 68%; max-width: 82%; }
-  .detail-model.is-star { max-height: 80%; max-width: 94%; }
-  .detail-model.is-thinking { max-height: 98%; max-width: 98%; width: 98%; }
+  .detail-model-image.is-star { max-height: 80%; max-width: 94%; }
+  .detail-model-image.is-thinking { max-height: 98%; max-width: 98%; width: 98%; }
   .wireframe-toggle { bottom: 18px; right: 8vw; }
   .model-views { height: auto; min-height: 100svh; padding: 70px 5vw 90px; }
   .views-grid { grid-template-columns: 1fr; }
