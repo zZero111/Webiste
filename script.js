@@ -7,10 +7,14 @@ const stageNumber = document.querySelector(".stage-number");
 const modelSelection = document.querySelector(".model-selection");
 const modelDetail = document.querySelector(".model-detail");
 const modelViews = document.querySelector(".model-views");
+const modelMaterials = document.querySelector(".model-materials");
 const detailTitle = document.querySelector("#detail-title");
 const detailModel = document.querySelector(".detail-model");
-const viewModel = document.querySelector(".view-model");
-const viewWireframe = document.querySelector(".view-wireframe");
+const detailModelImage = document.querySelector(".detail-model-image");
+const viewModel = document.querySelector(".view-model-3d");
+const viewModelImage = document.querySelector(".view-model-image");
+const viewWireframe = document.querySelector(".view-wireframe-3d");
+const viewWireframeImage = document.querySelector(".view-wireframe-image");
 const detailBack = document.querySelector(".detail-back");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
 const hero = document.querySelector(".hero");
@@ -68,17 +72,31 @@ function selectModel(option, index) {
   stageName.textContent = option.dataset.model;
   stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / 03`;
   detailTitle.textContent = option.dataset.model;
-  detailModel.src = option.dataset.image;
+  const isScythe = /\.(glb|gltf)$/i.test(option.dataset.image);
+  if (isScythe) {
+    detailModel.src = option.dataset.image;
+    viewModel.src = option.dataset.image;
+    viewWireframe.src = option.dataset.wireframe;
+  }
   detailModel.alt = `${option.dataset.model} model`;
+  detailModelImage.src = option.dataset.image;
+  detailModelImage.alt = `${option.dataset.model} model`;
   detailModel.dataset.modelImage = option.dataset.image;
   detailModel.dataset.wireframeImage = option.dataset.wireframe;
-  viewModel.src = option.dataset.image;
   viewModel.alt = `${option.dataset.model} rendered view`;
-  viewWireframe.src = option.dataset.wireframe;
+  viewModelImage.src = option.dataset.image;
+  viewModelImage.alt = `${option.dataset.model} rendered view`;
   viewWireframe.alt = `${option.dataset.model} wireframe view`;
+  viewWireframeImage.src = option.dataset.wireframe;
+  viewWireframeImage.alt = `${option.dataset.model} wireframe view`;
+  detailModel.classList.toggle("is-hidden", !isScythe);
+  detailModelImage.classList.toggle("is-hidden", isScythe);
+  viewModel.classList.toggle("is-hidden", !isScythe);
+  viewModelImage.classList.toggle("is-hidden", isScythe);
+  viewWireframe.classList.toggle("is-hidden", !isScythe);
+  viewWireframeImage.classList.toggle("is-hidden", isScythe);
   detailModel.classList.toggle("is-star", index === 1);
   detailModel.classList.toggle("is-thinking", index === 2);
-  detailModel.classList.remove("is-wireframe");
   wireframeToggle?.setAttribute("aria-pressed", "false");
 
   updateCarousel(index);
@@ -135,13 +153,15 @@ modelDetail?.addEventListener("wheel", (event) => {
 
   if (pageScrollLocked || !modelViews) return;
 
-  const page4Top = modelViews.offsetTop;
-  const atPage4 = modelDetail.scrollTop >= page4Top - 2;
-  const target = event.deltaY > 0 && !atPage4
-    ? page4Top
-    : event.deltaY < 0 && atPage4
-      ? 0
-      : null;
+  const pageStops = [0, modelViews.offsetTop];
+  if (modelMaterials) pageStops.push(modelMaterials.offsetTop);
+  const currentStop = pageStops.reduce((closest, stop, index) => {
+    return Math.abs(modelDetail.scrollTop - stop) < Math.abs(modelDetail.scrollTop - pageStops[closest]) ? index : closest;
+  }, 0);
+  const nextStop = event.deltaY > 0
+    ? pageStops[Math.min(currentStop + 1, pageStops.length - 1)]
+    : pageStops[Math.max(currentStop - 1, 0)];
+  const target = nextStop === pageStops[currentStop] ? null : nextStop;
 
   if (target === null) return;
   pageScrollLocked = true;
@@ -153,10 +173,10 @@ modelDetail?.addEventListener("wheel", (event) => {
 wireframeToggle?.addEventListener("click", () => {
   const showingWireframe = wireframeToggle.getAttribute("aria-pressed") === "true";
   wireframeToggle.setAttribute("aria-pressed", String(!showingWireframe));
-  detailModel.src = showingWireframe
+  detailModelImage.src = showingWireframe
     ? detailModel.dataset.modelImage
     : detailModel.dataset.wireframeImage;
-  detailModel.classList.toggle("is-wireframe", !showingWireframe);
+  detailModelImage.classList.toggle("is-wireframe", !showingWireframe);
 });
 
 if (hero && modelSelection && modelDetail) {

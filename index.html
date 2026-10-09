@@ -6,6 +6,7 @@
     <meta name="description" content="Charlie Marshall — 3D artist, modeller and visual designer." />
     <title>Charlie Marshall — 3D Artist</title>
     <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
     <script src="script.js" defer></script>
   </head>
   <body>
@@ -16,7 +17,7 @@
     <main>
       <section class="hero" id="top" aria-label="Charlie Marshall home page">
         <div class="hero-art">
-          <img src="Images/Mouse.png" alt="Temporary 3D character artwork placeholder" />
+          <model-viewer src="Images/scythe.gltf" alt="Scythe 3D model" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
         </div>
         <div class="hero-intro">
           <p class="hero-kicker">3D artist · modeller · designer</p>
@@ -39,8 +40,8 @@
           <p class="menu-kicker">Choose a model</p>
           <h2 id="models-title">Characters</h2>
           <div class="model-list" role="list">
-            <button class="model-option" type="button" data-model="Mouse" data-image="Images/Mouse.png" data-wireframe="Images/Mouse-wireframe.png" aria-pressed="true">
-              <span>Mouse</span>
+            <button class="model-option" type="button" data-model="Scythe" data-image="Images/scythe.gltf" data-wireframe="Images/scythe.gltf" aria-pressed="true">
+              <span>Scythe</span>
             </button>
             <button class="model-option" type="button" data-model="Star eyes" data-image="Images/Star-eyes.png" data-wireframe="Images/Star-eyes-wireframe.png" aria-pressed="false">
               <span>Star eyes</span>
@@ -54,11 +55,11 @@
         <div class="model-stage">
           <div class="stage-copy">
             <p class="stage-number">01 / 03</p>
-            <p class="stage-name" aria-live="polite">Mouse</p>
+            <p class="stage-name" aria-live="polite">Scythe</p>
           </div>
           <div class="model-window">
             <img class="carousel-model is-left" data-index="2" src="Images/Thinking-face.png" alt="Thinking face model preview" />
-            <img class="carousel-model is-center" data-index="0" src="Images/Mouse.png" alt="Mouse model preview" />
+            <model-viewer class="carousel-model is-center" data-index="0" src="Images/scythe.gltf" alt="Scythe model preview" loading="eager"></model-viewer>
             <img class="carousel-model is-right" data-index="1" src="Images/Star-eyes.png" alt="Star eyes model preview" />
           </div>
         </div>
@@ -69,12 +70,13 @@
           <div class="detail-hero">
             <div class="detail-copy">
               <p class="menu-kicker">Model study</p>
-              <h2 id="detail-title">Mouse</h2>
+              <h2 id="detail-title">Scythe</h2>
               <p class="detail-instruction">Drag the model left or right to rotate it.</p>
               <button class="detail-back" type="button">Back to models</button>
             </div>
             <div class="detail-stage">
-              <img class="detail-model" src="Images/Mouse.png" alt="Mouse model" draggable="false" />
+              <model-viewer class="detail-model" src="Images/scythe.gltf" alt="Scythe model" loading="eager" camera-controls camera-target="8.7m 2.6m 0m" shadow-intensity="1"></model-viewer>
+              <img class="detail-model-image is-hidden" src="Images/Star-eyes.png" alt="Star eyes model" draggable="false" />
               <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
             </div>
           </div>
@@ -85,14 +87,19 @@
             </div>
             <div class="views-grid">
               <figure class="model-view model-view-main">
-                <img class="view-model" src="Images/Mouse.png" alt="Mouse rendered view" />
+                <model-viewer class="view-model-3d" src="Images/scythe.gltf" alt="Scythe model view" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                <img class="view-model-image is-hidden" src="Images/Star-eyes.png" alt="Star eyes rendered view" />
                 <figcaption>Rendered view</figcaption>
               </figure>
               <figure class="model-view model-view-wireframe">
-                <img class="view-wireframe" src="Images/Mouse-wireframe.png" alt="Mouse wireframe view" />
+                <model-viewer class="view-wireframe-3d" src="Images/scythe.gltf" alt="Scythe model view" loading="eager" camera-target="8.7m 2.6m 0m" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                <img class="view-wireframe-image is-hidden" src="Images/Star-eyes-wireframe.png" alt="Star eyes wireframe view" />
                 <figcaption>Wireframe view</figcaption>
               </figure>
             </div>
+          </section>
+          <section class="model-materials" id="model-materials" aria-label="Page 05 texture maps">
+            <img class="materials-image" src="Images/Uvs.png" alt="Texture maps for a stylized tree environment" />
           </section>
         </div>
       </section>
