@@ -16,6 +16,7 @@ const viewModelImage = document.querySelector(".view-model-image");
 const viewWireframe = document.querySelector(".view-wireframe-3d");
 const viewWireframeImage = document.querySelector(".view-wireframe-image");
 const detailBack = document.querySelector(".detail-back");
+const detailInstruction = document.querySelector(".detail-instruction");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
 const hero = document.querySelector(".hero");
 const isModelFile = (src) => /\.(glb|gltf)$/i.test(src);
@@ -163,6 +164,11 @@ function selectModel(option, index) {
   detailModelImage.classList.remove("is-wireframe");
   rotation = 0;
   detailModelImage.style.transform = "";
+  if (detailInstruction) {
+    detailInstruction.textContent = is3D
+      ? "Drag to rotate the model. Scroll over it to zoom in and out."
+      : "Drag the model left or right to rotate it.";
+  }
   wireframeToggle?.setAttribute("aria-pressed", "false");
 
   updateCarousel(index);
@@ -180,6 +186,7 @@ modelOptions.forEach((option, index) => {
   });
   option.addEventListener("click", () => {
     selectModel(option, index);
+    resetModelZoom();
     pageScrollLocked = false;
     if (modelDetail) modelDetail.scrollTop = 0;
     document.body.classList.add("is-detail-active");
@@ -214,11 +221,51 @@ detailBack?.addEventListener("click", () => {
   modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
+// Scrolling over the 3D model zooms it: up zooms in, down zooms back out. Once it is fully
+// zoomed out, a fresh scroll down moves on to the next page as normal.
+const minModelZoom = 0.3;
+const zoomGestureGap = 400;
+let modelZoom = 1;
+let lastZoomWheel = 0;
+
+function applyModelZoom() {
+  const orbit = detailModel.getCameraOrbit?.();
+  if (!orbit) return;
+  detailModel.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${(modelZoom * 135).toFixed(1)}%`;
+}
+
+function resetModelZoom() {
+  modelZoom = 1;
+  if (detailModel.loaded) applyModelZoom();
+}
+
+function handleModelZoom(event) {
+  const overModel = !detailModel.classList.contains("is-hidden")
+    && event.target instanceof Element
+    && event.target.closest(".detail-model");
+  if (!overModel || modelDetail.scrollTop > 2) return false;
+
+  // event.timeStamp is when the scroll happened, so a busy frame cannot split one gesture in two.
+  const now = event.timeStamp;
+  const sameGesture = now - lastZoomWheel < zoomGestureGap;
+  const zoomingOut = event.deltaY > 0;
+
+  // Fully zoomed out: let a new scroll down change page, but swallow the tail of the zoom-out gesture.
+  if (zoomingOut && modelZoom >= 1 && !sameGesture) return false;
+
+  lastZoomWheel = now;
+  const delta = event.deltaMode === 1 ? event.deltaY * 33 : event.deltaY;
+  modelZoom = Math.min(1, Math.max(minModelZoom, modelZoom * Math.exp(delta * 0.0015)));
+  applyModelZoom();
+  return true;
+}
+
 modelDetail?.addEventListener("wheel", (event) => {
   if (!document.body.classList.contains("is-detail-active")) return;
   event.preventDefault();
 
   if (pageScrollLocked || !modelViews) return;
+  if (handleModelZoom(event)) return;
 
   const pageStops = [0, modelViews.offsetTop];
   if (modelMaterials) pageStops.push(modelMaterials.offsetTop);

@@ -240,8 +240,10 @@ body.is-detail-active { overflow: hidden; }
 
 .detail-model {
   cursor: grab;
-  height: 78%;
-  width: 78%;
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
 }
 
 .detail-model-image {
@@ -513,7 +515,6 @@ body.is-detail-active { overflow: hidden; }
   .detail-copy { padding: 78px 10vw 14px; }
   .detail-copy h2 { font-size: 4.5rem; }
   .detail-stage { min-height: 0; }
-  .detail-model { height: 82%; width: 92%; }
   .detail-model-image { max-height: 68%; max-width: 82%; }
   .detail-model-image.is-star { max-height: 80%; max-width: 94%; }
   .detail-model-image.is-thinking { max-height: 98%; max-width: 98%; width: 98%; }
