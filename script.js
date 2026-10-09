@@ -181,7 +181,7 @@ function selectModel(option, index) {
   detailModelImage.style.transform = "";
   if (detailInstruction) {
     detailInstruction.textContent = is3D
-      ? "Drag to rotate the model. Scroll over it to zoom in and out."
+      ? "Drag to rotate the model. Scroll or pinch over it to zoom."
       : "Drag the model left or right to rotate it.";
   }
   wireframeToggle?.setAttribute("aria-pressed", "false");
@@ -273,6 +273,36 @@ function resetModelZoom() {
   modelZoom = 1;
   if (detailModel.loaded) applyModelZoom();
 }
+
+// Two-finger pinch on touch screens: fingers apart zooms in, together zooms out. One finger still
+// rotates the model and swiping up or down still changes page.
+let pinchStartDistance = 0;
+let pinchStartZoom = 1;
+
+const touchDistance = (touches) => Math.hypot(
+  touches[0].clientX - touches[1].clientX,
+  touches[0].clientY - touches[1].clientY,
+);
+
+detailModel?.addEventListener("touchstart", (event) => {
+  if (event.touches.length !== 2) return;
+  pinchStartDistance = touchDistance(event.touches) || 1;
+  pinchStartZoom = modelZoom;
+}, { passive: true });
+
+detailModel?.addEventListener("touchmove", (event) => {
+  if (event.touches.length !== 2 || !pinchStartDistance) return;
+  if (event.cancelable) event.preventDefault();
+  const ratio = pinchStartDistance / (touchDistance(event.touches) || 1);
+  modelZoom = Math.min(1, Math.max(minModelZoom, pinchStartZoom * ratio));
+  applyModelZoom();
+}, { passive: false });
+
+const endPinch = (event) => {
+  if (event.touches.length < 2) pinchStartDistance = 0;
+};
+detailModel?.addEventListener("touchend", endPinch, { passive: true });
+detailModel?.addEventListener("touchcancel", endPinch, { passive: true });
 
 function handleModelZoom(event) {
   const overModel = !detailModel.classList.contains("is-hidden")
