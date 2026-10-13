@@ -31,14 +31,20 @@ const setModelSrc = (viewer, src) => {
 
 const wireframeColor = { r: 1, g: 223 / 255, b: 62 / 255 };
 
+// model-viewer keeps its three.js scene under a private symbol; reach it to restyle the model.
+function getModelScene(viewer) {
+  const sceneKey = Object.getOwnPropertySymbols(viewer).find((key) => key.description === "scene");
+  return sceneKey && viewer[sceneKey];
+}
+
 function setModelWireframe(viewer, enabled) {
   viewer.dataset.wireframe = String(enabled);
-  const sceneKey = Object.getOwnPropertySymbols(viewer).find((key) => key.description === "scene");
-  const scene = sceneKey && viewer[sceneKey];
+  const scene = getModelScene(viewer);
   if (!scene || !viewer.loaded) return;
 
   scene.traverse((object) => {
-    if (!object.isMesh) return;
+    if (object.userData.isCastShadow) object.visible = !enabled;
+    if (!object.isMesh || object.userData.isCastShadow) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach((material) => {
       if (!material.userData.original) {
@@ -74,82 +80,104 @@ document.querySelectorAll("model-viewer").forEach((viewer) => {
   viewer.addEventListener("error", (event) => console.error("Model failed to load:", viewer.getAttribute("src"), event.detail));
 });
 
-// A soft oval shadow on the floor under a 3D model. model-viewer's own shadows fall straight down and
-// fade with height, which leaves only a faint line under a tall, thin model like the scythe. This draws
-// a wider grounding shadow behind the canvas and keeps it under the model's base as it is rotated,
-// tilted and zoomed. It fades out when the camera looks steeply down on, or up at, the floor.
-function addGroundShadow(viewer) {
-  const container = viewer.parentElement;
-  const shadow = document.createElement("div");
-  shadow.className = "ground-shadow";
-  shadow.setAttribute("aria-hidden", "true");
-  viewer.before(shadow);
+// A shadow in the shape of the model, cast onto the floor by a light above and to one side.
+// model-viewer's own shadow falls straight down and fades with height, which leaves only a faint line
+// under a tall, thin model like the scythe. Instead, each part of the model gets a flattened copy that
+// is squashed onto the floor along the light direction every frame, so the shadow keeps the scythe's
+// silhouette and stays put on the floor as the model is rotated, tilted, zoomed or panned.
+const shadowLight = { x: 0.55, y: 1.4, z: 0.45 }; // direction towards the light (right, above, in front)
+const shadowOpacity = 0.42;
 
-  let floorPoint = null;
-  let footprint = 0;
-  let frame;
+function addCastShadow(viewer) {
+  let shadows = [];
 
-  const place = () => {
-    frame = undefined;
-    const orbit = viewer.getCameraOrbit?.();
-    const target = viewer.getCameraTarget?.();
-    const rect = viewer.getBoundingClientRect();
-    if (!floorPoint || !orbit || !target || !rect.height) return;
+  const build = () => {
+    const scene = getModelScene(viewer);
+    if (!scene) return;
+    shadows.forEach((shadow) => shadow.removeFromParent());
+    shadows = [];
 
-    // Camera position and axes from the orbit (theta around the vertical axis, phi down from the top).
-    const sinPhi = Math.sin(orbit.phi);
-    const dir = [sinPhi * Math.sin(orbit.theta), Math.cos(orbit.phi), sinPhi * Math.cos(orbit.theta)];
-    const camera = [target.x + dir[0] * orbit.radius, target.y + dir[1] * orbit.radius, target.z + dir[2] * orbit.radius];
-    const rightLength = Math.hypot(dir[2], dir[0]) || 1;
-    const right = [dir[2] / rightLength, 0, -dir[0] / rightLength];
-    const up = [
-      dir[1] * right[2] - dir[2] * right[1],
-      dir[2] * right[0] - dir[0] * right[2],
-      dir[0] * right[1] - dir[1] * right[0],
-    ];
-    const toPoint = [floorPoint.x - camera[0], floorPoint.y - camera[1], floorPoint.z - camera[2]];
-    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-    const depth = -dot(toPoint, dir);
-    if (depth <= 0) return;
+    const parts = [];
+    scene.traverse((object) => {
+      // Only the model's own parts, not model-viewer's helpers (such as its built-in shadow plane).
+      if (object.isMesh && object.material?.isMeshStandardMaterial && !object.userData.isCastShadow) parts.push(object);
+    });
+    if (!parts.length) return;
 
-    // Project the floor point onto the viewer, then convert to the container's coordinates.
-    const halfHeight = Math.tan((viewer.getFieldOfView() * Math.PI / 180) / 2) * depth;
-    const pixelsPerUnit = rect.height / (2 * halfHeight);
-    const box = container.getBoundingClientRect();
-    const x = rect.left - box.left + rect.width / 2 + dot(toPoint, right) * pixelsPerUnit;
-    const y = rect.top - box.top + rect.height / 2 - dot(toPoint, up) * pixelsPerUnit;
-    const width = footprint * pixelsPerUnit;
+    // The floor is the lowest point of the model. Track it relative to one part so it follows the
+    // model when model-viewer shifts it around (as zooming toward the pointer does).
+    scene.updateMatrixWorld(true);
+    const anchor = parts[0];
+    const point = anchor.position.clone();
+    let lowest = Infinity;
+    parts.forEach((part) => {
+      const positions = part.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i += 1) {
+        lowest = Math.min(lowest, point.fromBufferAttribute(positions, i).applyMatrix4(part.matrixWorld).y);
+      }
+    });
+    const floorOffset = lowest - anchor.matrixWorld.elements[13];
+    const projection = anchor.matrixWorld.clone();
 
-    // Full strength from the usual side-on views, fading out when looking steeply down or from below.
-    const tilt = orbit.phi * 180 / Math.PI;
-    const strength = Math.min(1, Math.max(0, (tilt - 40) / 25), Math.max(0, (105 - tilt) / 15));
+    parts.forEach((part) => {
+      // Black with alpha, blended with MAX so overlapping pieces don't stack up darker and the
+      // shadow never darkens the model itself.
+      const material = part.material.clone();
+      Object.assign(material, {
+        transparent: true,
+        depthWrite: false,
+        wireframe: false,
+        toneMapped: false,
+        metalness: 0,
+        roughness: 1,
+        envMapIntensity: 0,
+        map: null,
+        blending: 5, // THREE.CustomBlending
+        blendEquation: 104, // THREE.MaxEquation
+        blendEquationAlpha: 104,
+      });
+      material.color.setRGB(0, 0, 0);
+      material.emissive?.setRGB(0, 0, 0);
+      // Output flat black at the shadow's opacity, ignoring the environment lighting model-viewer adds.
+      material.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <dithering_fragment>",
+          "#include <dithering_fragment>\n  gl_FragColor = vec4(0.0, 0.0, 0.0, opacity);",
+        );
+      };
+      material.customProgramCacheKey = () => "cast-shadow";
 
-    shadow.style.left = `${x}px`;
-    shadow.style.top = `${y}px`;
-    shadow.style.width = `${width}px`;
-    shadow.style.height = `${width * Math.max(0.16, Math.abs(Math.cos(orbit.phi)))}px`;
-    shadow.style.setProperty("--shadow-strength", strength.toFixed(3));
-    shadow.classList.add("is-ready");
+      const shadow = new part.constructor(part.geometry, material);
+      shadow.userData.isCastShadow = true;
+      shadow.matrixAutoUpdate = false;
+      shadow.matrixWorldAutoUpdate = false;
+      shadow.frustumCulled = false;
+      shadow.visible = viewer.dataset.wireframe !== "true";
+      shadow.onBeforeRender = (renderer, renderScene, camera) => {
+        const floor = anchor.matrixWorld.elements[13] + floorOffset + 0.001;
+        const { x, y, z } = shadowLight;
+        // Planar projection onto the floor (y = floor) along the light direction.
+        projection.set(
+          y, -x, 0, x * floor,
+          0, 0, 0, y * floor,
+          0, -z, y, z * floor,
+          0, 0, 0, y,
+        );
+        shadow.matrixWorld.multiplyMatrices(projection, part.matrixWorld);
+        // Hide it when looking up from below the floor.
+        material.opacity = camera.matrixWorld.elements[13] > floor ? shadowOpacity : 0;
+      };
+      scene.add(shadow);
+      shadows.push(shadow);
+    });
+    scene.queueRender?.();
   };
-  const queuePlace = () => {
-    if (frame === undefined) frame = requestAnimationFrame(place);
-  };
 
-  const measure = () => {
-    const centre = viewer.getBoundingBoxCenter();
-    const size = viewer.getDimensions();
-    floorPoint = { x: centre.x, y: centre.y - size.y / 2, z: centre.z };
-    footprint = Math.max(size.x, size.z) * 0.8;
-    queuePlace();
-  };
-
-  viewer.addEventListener("load", measure);
-  viewer.addEventListener("camera-change", queuePlace);
-  window.addEventListener("resize", queuePlace);
-  if (viewer.loaded) measure();
+  viewer.addEventListener("load", build);
+  if (viewer.loaded) build();
 }
 
-document.querySelectorAll(".hero-art model-viewer, .detail-model, .view-model-3d").forEach(addGroundShadow);
+document.querySelectorAll(".hero-art model-viewer, .detail-model, .view-model-3d").forEach(addCastShadow);
 
 let pageScrollLocked = false;
 let touchStartY = 0;
