@@ -26,7 +26,10 @@ const resolveModelSrc = (src) => (location.protocol === "file:" && window.EMBEDD
 
 const setModelSrc = (viewer, src) => {
   const resolved = resolveModelSrc(src);
-  if (viewer.getAttribute("src") !== resolved) viewer.setAttribute("src", resolved);
+  if (viewer.getAttribute("src") === resolved) return;
+  // A new model is framed around its own centre, not wherever the camera was aimed for the last one.
+  viewer.cameraTarget = "auto auto auto";
+  viewer.setAttribute("src", resolved);
 };
 
 const wireframeColor = { r: 1, g: 223 / 255, b: 62 / 255 };
@@ -279,7 +282,6 @@ function selectModel(option, index) {
   viewModelImage.classList.toggle("is-hidden", is3D);
   viewWireframe.classList.toggle("is-hidden", !is3D);
   viewWireframeImage.classList.toggle("is-hidden", is3D);
-  detailModelImage.classList.toggle("is-star", index === 1);
   detailModelImage.classList.toggle("is-thinking", index === 2);
   detailModelImage.classList.remove("is-wireframe");
   rotation = 0;
@@ -442,7 +444,8 @@ function resetModelZoom() {
   modelPan = { x: 0, y: 0, z: 0 };
   if (!detailModel.loaded) return;
   detailModel.cameraOrbit = "0deg 75deg 135%";
-  applyModelTarget();
+  // Look at the centre of whichever model is opening (a different model may still be loading).
+  detailModel.cameraTarget = "auto auto auto";
 }
 
 // Remember the framing the viewer chose for the model, once it has loaded.
