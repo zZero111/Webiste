@@ -322,9 +322,23 @@ function openDetail() {
   modelDetail.inert = false;
   document.body.classList.add("is-detail-active");
   detailBack?.focus({ preventScroll: true });
+  showRotateHint();
+}
+
+// Like Sketchfab: shortly after a 3D model opens, a hand icon swings it gently back and forth to show
+// it can be rotated. It stops as soon as the visitor drags or zooms the model.
+function showRotateHint() {
+  if (detailModel.classList.contains("is-hidden")) return;
+  detailModel.interactionPrompt = "auto";
+  detailModel.resetInteractionPrompt?.();
+}
+
+function hideRotateHint() {
+  detailModel.interactionPrompt = "none";
 }
 
 function closeDetail() {
+  hideRotateHint();
   document.body.classList.remove("is-detail-active");
   modelDetail.inert = true;
   modelSelection?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -393,6 +407,7 @@ function applyModelTarget() {
 
 // Change the zoom, keeping the point under (clientX, clientY) fixed on screen.
 function setModelZoom(newZoom, clientX, clientY) {
+  hideRotateHint();
   const previous = modelZoom;
   modelZoom = Math.min(1, Math.max(minModelZoom, newZoom));
   if (modelZoom === previous) return;
@@ -448,14 +463,17 @@ function resetModelZoom() {
 }
 
 // Remember the framing the viewer chose for the model, once it has loaded.
-function captureModelFraming() {
+async function captureModelFraming() {
   modelPan = { x: 0, y: 0, z: 0 };
   const target = detailModel.getCameraTarget();
   defaultTarget = { x: target.x, y: target.y, z: target.z };
+  // Start each newly loaded model front-on, then wait for the camera to actually move there before
+  // measuring it (the jump only happens on the viewer's next update).
   detailModel.cameraOrbit = `0deg 75deg ${(modelZoom * 135).toFixed(1)}%`;
   detailModel.jumpCameraToGoal();
+  await detailModel.updateComplete;
   zoomedOutRadius = detailModel.getCameraOrbit().radius / modelZoom;
-  applyModelZoom();
+  applyModelTarget();
 }
 
 detailModel?.addEventListener("load", captureModelFraming);

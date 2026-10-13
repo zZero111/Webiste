@@ -453,9 +453,9 @@ body.is-detail-active { overflow: hidden; }
   position: relative;
 }
 
-.stage-copy { left: 7%; position: absolute; text-align: left; top: 7%; z-index: 3; }
+.stage-copy { left: 3.5%; position: absolute; text-align: left; top: 3%; z-index: 3; }
 .stage-number { color: rgba(255, 223, 62, .65); }
-.stage-name { font-size: clamp(3rem, 7vw, 8rem); font-weight: 700; letter-spacing: -.1em; line-height: .82; margin: 15px 0 10px; }
+.stage-name { font-size: clamp(2.6rem, 5.5vw, 6.5rem); font-weight: 700; letter-spacing: -.1em; line-height: .82; margin: 10px 0 10px; }
 
 .model-window {
   bottom: 3%;
@@ -520,8 +520,8 @@ body.is-detail-active { overflow: hidden; }
   .model-option > span { font-size: 1.45rem; }
   .menu-hint { margin-top: 35px; }
   .model-stage { min-height: 55svh; }
-  .stage-copy { left: 9%; top: 7%; }
-  .stage-name { font-size: 3.5rem; }
+  .stage-copy { left: 5%; top: 3%; }
+  .stage-name { font-size: 2.8rem; }
   .model-window { bottom: 0; left: 0; right: 0; top: 15%; }
   .carousel-model { height: 64%; width: 42%; }
   .carousel-model.is-center { left: 50%; transform: translate(-50%, -50%) scale(1.15) rotateY(0deg); }
