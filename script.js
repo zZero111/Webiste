@@ -16,7 +16,6 @@ const viewModelImage = document.querySelector(".view-model-image");
 const viewWireframe = document.querySelector(".view-wireframe-3d");
 const viewWireframeImage = document.querySelector(".view-wireframe-image");
 const detailBack = document.querySelector(".detail-back");
-const detailInstruction = document.querySelector(".detail-instruction");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
 const hero = document.querySelector(".hero");
 const isModelFile = (src) => /\.(glb|gltf)$/i.test(src);
@@ -227,7 +226,11 @@ const animateElementScrollTo = (element, target) => {
   });
 };
 
+// Shows a model in the centre of the carousel, with its name and number above it. Hovering the menu
+// previews a model this way; moving off the menu brings back the selected one.
 function updateCarousel(index) {
+  stageName.textContent = modelOptions[index].dataset.model;
+  stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / ${String(modelOptions.length).padStart(2, "0")}`;
   carouselModels.forEach((model) => {
     const modelIndex = Number(model.dataset.index);
     const distance = (modelIndex - index + modelOptions.length) % modelOptions.length;
@@ -252,9 +255,7 @@ function selectModel(option, index) {
     item.setAttribute("aria-pressed", String(item === option));
   });
 
-  stageName.textContent = option.dataset.model;
   selectedIndex = index;
-  stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / ${String(modelOptions.length).padStart(2, "0")}`;
   detailTitle.textContent = option.dataset.model;
   const is3D = isModelFile(option.dataset.image);
   if (is3D) {
@@ -285,11 +286,6 @@ function selectModel(option, index) {
   detailModelImage.classList.remove("is-wireframe");
   rotation = 0;
   detailModelImage.style.transform = "";
-  if (detailInstruction) {
-    detailInstruction.textContent = is3D
-      ? "Drag to rotate the model. Scroll or pinch over it to zoom."
-      : "Drag the model left or right to rotate it.";
-  }
   wireframeToggle?.setAttribute("aria-pressed", "false");
 
   updateCarousel(index);
