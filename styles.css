@@ -138,7 +138,9 @@ body.is-detail-active { overflow: hidden; }
   color: var(--yellow);
   display: grid;
   grid-template-columns: minmax(265px, 25.4%) 1fr;
-  min-height: 100svh;
+  /* Exactly one screen tall (pages here change with a swipe or scroll, not by scrolling freely). */
+  height: 100svh;
+  min-height: 420px;
   position: relative;
 }
 
@@ -400,7 +402,9 @@ body.is-detail-active { overflow: hidden; }
 }
 
 .model-menu {
-  padding: clamp(70px, 10vw, 130px) clamp(28px, 6vw, 80px) 40px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: clamp(70px, 9vh, 130px) clamp(28px, 6vw, 80px) 40px;
 }
 
 .menu-kicker, .stage-number, .menu-hint {
@@ -416,10 +420,65 @@ body.is-detail-active { overflow: hidden; }
   font-size: clamp(1.6rem, 2.5vw, 3rem);
   letter-spacing: 0;
   line-height: .9;
-  margin: 18px 0 48px;
+  margin: 18px 0 clamp(28px, 5vh, 48px);
 }
 
-.model-list { display: grid; gap: 18px; }
+.category-list { display: grid; gap: 22px; }
+
+.category-toggle {
+  align-items: baseline;
+  background: transparent;
+  border: 0;
+  color: var(--yellow);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  gap: 12px;
+  padding: 0;
+  text-align: left;
+  transition: transform .25s ease;
+}
+
+.category-toggle:hover, .category-toggle:focus-visible { transform: translateX(8px); }
+.category-toggle:focus-visible { outline: 1px solid var(--yellow); outline-offset: 8px; }
+.category-name { font-size: clamp(1.7rem, 2.7vw, 3.2rem); line-height: .9; }
+.category-count { color: #b9b0bd; font-size: .75rem; letter-spacing: .14em; }
+
+/* The open/close indicator: a plus that turns into a minus. */
+.category-toggle::after {
+  align-self: center;
+  border: 1px solid rgba(255, 223, 62, .55);
+  border-radius: 50%;
+  content: "+";
+  display: grid;
+  font-size: .95rem;
+  height: 26px;
+  line-height: 1;
+  place-items: center;
+  transition: transform .35s ease;
+  width: 26px;
+}
+
+.category.is-open .category-toggle::after { content: "\2212"; transform: rotate(180deg); }
+
+/* The category's models unfold beneath it. */
+.category-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .5s cubic-bezier(.22,.8,.3,1), margin .5s cubic-bezier(.22,.8,.3,1), opacity .4s ease;
+}
+
+.category.is-open .category-items { grid-template-rows: 1fr; margin-top: 18px; opacity: 1; }
+.category-items > .model-list { min-height: 0; overflow: hidden; }
+
+.model-list {
+  border-left: 1px solid rgba(255, 223, 62, .3);
+  display: grid;
+  gap: 18px;
+  margin-left: 4px;
+  padding-left: 20px;
+}
 
 .model-option {
   background: transparent;
@@ -444,7 +503,9 @@ body.is-detail-active { overflow: hidden; }
 .model-option[aria-pressed="true"] { color: var(--yellow); }
 .model-option:hover, .model-option:focus-visible, .model-option.is-active { color: var(--yellow); transform: translateX(8px); }
 .model-option:focus-visible { outline: 1px solid var(--yellow); outline-offset: 8px; }
-.menu-hint { margin-top: 70px; }
+.menu-hint { margin-top: clamp(32px, 7vh, 70px); }
+.model-selection:not(.is-category-open) .hint-open,
+.model-selection.is-category-open .hint-closed { display: none; }
 .hint-touch { display: none; }
 @media (hover: none) {
   .hint-pointer { display: none; }
@@ -483,39 +544,34 @@ body.is-detail-active { overflow: hidden; }
   top: 50%;
   transform-origin: center;
   backface-visibility: hidden;
+  /* Every position uses the same transform, so moving between them (including bursting out of the
+     bundle) animates smoothly. */
+  transform: translate(-50%, -50%) translateX(var(--x, 0%)) rotate(var(--r, 0deg)) scale(var(--s, 1)) rotateY(var(--ry, 0deg));
   transition: left 1.1s cubic-bezier(.22,.8,.3,1), opacity .9s cubic-bezier(.22,.8,.3,1), transform 1.1s cubic-bezier(.22,.8,.3,1), filter .9s ease;
   width: 37%;
 }
 
-.carousel-model.is-center {
+.carousel-model.is-center { --s: 1.25; left: 50%; opacity: 1; z-index: 2; }
+.carousel-model.is-left { --ry: 32deg; --s: .34; left: 15%; opacity: .62; z-index: 1; }
+.carousel-model.is-right { --ry: -32deg; --s: .34; left: 85%; opacity: .62; z-index: 1; }
+
+/* A model waiting on the far side of the ring: tucked out of sight behind the centre one. */
+.carousel-model.is-far { --s: .2; left: 50%; opacity: 0; pointer-events: none; z-index: 0; }
+
+/* A closed category: its models bundled together in the middle, fanned out like a weapon rack. */
+.carousel-model.is-gathered {
+  --r: var(--gather-r, 0deg);
+  --s: .78;
+  --x: var(--gather-x, 0%);
   left: 50%;
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1.25) rotateY(0deg);
-  z-index: 2;
-}
-
-.carousel-model.is-left {
-  left: 15%;
-  opacity: .62;
-  transform: translate(-50%, -50%) scale(.34) rotateY(32deg);
   z-index: 1;
 }
 
-.carousel-model.is-right {
-  left: 85%;
-  opacity: .62;
-  transform: translate(-50%, -50%) scale(.34) rotateY(-32deg);
-  z-index: 1;
-}
+/* Models from a category that isn't showing. */
+.carousel-model.is-away { --s: .2; left: 50%; opacity: 0; pointer-events: none; z-index: 0; }
 
-/* The model waiting on the far side of the ring: tucked out of sight behind the centre one. */
-.carousel-model.is-far {
-  left: 50%;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(.2) rotateY(0deg);
-  z-index: 0;
-}
+.model-selection:not(.is-category-open) .model-window { cursor: pointer; }
 
 @media (max-width: 700px) {
   .site-header { padding: 20px 5vw; }
@@ -527,20 +583,21 @@ body.is-detail-active { overflow: hidden; }
   .hero h1 { font-size: clamp(3.2rem, 14vw, 5.5rem); white-space: normal; }
   .hero-roles { gap: 8px; margin-top: 24px; }
   .hero-roles li { font-size: 1.18rem; }
-  .model-selection { grid-template-columns: 1fr; }
-  .model-menu { min-height: 45svh; padding: 90px 10vw 45px; }
+  .model-selection { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .model-menu { min-height: 0; overflow: visible; padding: 90px 10vw 32px; }
   .model-menu h2 { margin-bottom: 28px; }
-  .model-list { gap: 12px 16px; grid-template-columns: repeat(2, 1fr); }
+  .model-list { gap: 12px 16px; grid-template-columns: repeat(2, 1fr); padding-left: 14px; }
+  .category-name { font-size: 2rem; }
   .model-option > span { font-size: 1.45rem; }
   .menu-hint { margin-top: 35px; }
-  .model-stage { min-height: 55svh; }
+  .model-stage { min-height: 0; }
   .stage-copy { left: 5%; top: 3%; }
   .stage-name { font-size: 2.8rem; }
   .model-window { bottom: 0; left: 0; right: 0; top: 15%; }
   .carousel-model { height: 64%; width: 42%; }
-  .carousel-model.is-center { left: 50%; transform: translate(-50%, -50%) scale(1.15) rotateY(0deg); }
-  .carousel-model.is-left { left: 15%; transform: translate(-50%, -50%) scale(.3) rotateY(25deg); }
-  .carousel-model.is-right { left: 85%; transform: translate(-50%, -50%) scale(.3) rotateY(-25deg); }
+  .carousel-model.is-center { --s: 1.15; }
+  .carousel-model.is-left { --ry: 25deg; --s: .3; }
+  .carousel-model.is-right { --ry: -25deg; --s: .3; }
   .model-detail { grid-template-columns: 1fr; }
   .detail-hero { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); height: 100svh; min-height: 0; }
   .detail-copy { column-gap: 16px; display: grid; grid-template-columns: 1fr auto; padding: 78px 10vw 14px; }

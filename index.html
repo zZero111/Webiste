@@ -40,28 +40,43 @@
 
       <section class="model-selection" id="models" aria-labelledby="models-title">
         <aside class="model-menu">
-          <p class="menu-kicker">Choose a model</p>
-          <h2 id="models-title">Characters</h2>
-          <div class="model-list">
-            <button class="model-option" type="button" data-model="Scythe" data-image="Images/scythe.glb" data-wireframe="Images/scythe.glb" aria-pressed="true">
-              <span>Scythe</span>
-            </button>
-            <button class="model-option" type="button" data-model="Mace" data-image="Images/mace.glb" data-wireframe="Images/mace.glb" aria-pressed="false">
-              <span>Mace</span>
-            </button>
-            <button class="model-option" type="button" data-model="Dragon sword" data-image="Images/dragon-sword.glb" data-wireframe="Images/dragon-sword.glb" aria-pressed="false">
-              <span>Dragon sword</span>
-            </button>
-            <button class="model-option" type="button" data-model="Devil sword" data-image="Images/devil-sword.glb" data-wireframe="Images/devil-sword.glb" aria-pressed="false">
-              <span>Devil sword</span>
-            </button>
+          <p class="menu-kicker">Choose a category</p>
+          <h2 id="models-title">Collection</h2>
+          <div class="category-list">
+            <!-- Each category opens to list its models. To add one (e.g. vehicles), copy this block, give it
+                 its own data-category, and add its models' carousel viewers below with matching data-index. -->
+            <div class="category" data-category="Weapons">
+              <button class="category-toggle" type="button" aria-expanded="false" aria-controls="weapons-list">
+                <span class="category-name">Weapons</span>
+                <span class="category-count" aria-hidden="true">04</span>
+              </button>
+              <div class="category-items" id="weapons-list" inert>
+                <div class="model-list">
+                  <button class="model-option" type="button" data-model="Scythe" data-image="Images/scythe.glb" data-wireframe="Images/scythe.glb" aria-pressed="true">
+                    <span>Scythe</span>
+                  </button>
+                  <button class="model-option" type="button" data-model="Mace" data-image="Images/mace.glb" data-wireframe="Images/mace.glb" aria-pressed="false">
+                    <span>Mace</span>
+                  </button>
+                  <button class="model-option" type="button" data-model="Dragon sword" data-image="Images/dragon-sword.glb" data-wireframe="Images/dragon-sword.glb" aria-pressed="false">
+                    <span>Dragon sword</span>
+                  </button>
+                  <button class="model-option" type="button" data-model="Devil sword" data-image="Images/devil-sword.glb" data-wireframe="Images/devil-sword.glb" aria-pressed="false">
+                    <span>Devil sword</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <p class="menu-hint"><span class="hint-pointer">Hover to preview · click to explore</span><span class="hint-touch">Tap a model to explore</span></p>
+          <p class="menu-hint">
+            <span class="hint-closed">Choose a category to explore</span>
+            <span class="hint-open"><span class="hint-pointer">Hover to preview · click to explore</span><span class="hint-touch">Tap a model to explore</span></span>
+          </p>
         </aside>
         <div class="model-stage">
           <div class="stage-copy">
-            <p class="stage-number">01 / 03</p>
-            <p class="stage-name" aria-live="polite">Scythe</p>
+            <p class="stage-number">Category</p>
+            <p class="stage-name" aria-live="polite">Weapons</p>
           </div>
           <div class="model-window">
             <model-viewer class="carousel-model is-left" data-index="2" src="Images/dragon-sword.glb" alt="Dragon sword model preview" tabindex="-1" loading="eager"></model-viewer>

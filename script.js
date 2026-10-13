@@ -227,28 +227,90 @@ const animateElementScrollTo = (element, target) => {
   });
 };
 
-// Shows a model in the centre of the carousel, with its name and number above it. Hovering the menu
-// previews a model this way; moving off the menu brings back the selected one.
+// Page 2 groups the models into categories (Weapons for now). A closed category shows its models
+// bundled together in the middle of the stage; opening it bursts them out into the carousel.
+const categories = [...document.querySelectorAll(".category")];
+let openCategory = null;
+
+const categoryOf = (option) => option.closest(".category");
+const optionsIn = (category) => [...category.querySelectorAll(".model-option")];
+
+function setStageLabel(number, name) {
+  stageNumber.textContent = number;
+  stageName.textContent = name;
+}
+
+// Places a category's models: on the carousel ring around the model at `index` when the category is
+// open, or bundled in the middle of the stage when it is closed. Models from other categories hide.
 function updateCarousel(index) {
-  stageName.textContent = modelOptions[index].dataset.model;
-  stageNumber.textContent = `${String(index + 1).padStart(2, "0")} / ${String(modelOptions.length).padStart(2, "0")}`;
+  const current = modelOptions[index];
+  const category = categoryOf(current);
+  const items = optionsIn(category);
+  const open = category === openCategory;
+  const position = items.indexOf(current);
+
+  if (open) {
+    setStageLabel(`${String(position + 1).padStart(2, "0")} / ${String(items.length).padStart(2, "0")}`, current.dataset.model);
+  }
+
   carouselModels.forEach((model) => {
-    const modelIndex = Number(model.dataset.index);
-    const distance = (modelIndex - index + modelOptions.length) % modelOptions.length;
-    const image = modelOptions[modelIndex].dataset.image;
+    const option = modelOptions[Number(model.dataset.index)];
+    const image = option.dataset.image;
     if (model.tagName === "MODEL-VIEWER") {
       if (isModelFile(image)) setModelSrc(model, image);
     } else {
       model.src = image;
     }
+    model.setAttribute("alt", `${option.dataset.model} model preview`);
     model.className = "carousel-model";
-    // The models sit on a ring: one in the centre, one to each side and (with four) one waiting out of
-    // sight on the far side, which slides in as the carousel turns.
-    const position = distance === 0 ? "is-center" : distance === 1 ? "is-right" : distance === modelOptions.length - 1 ? "is-left" : "is-far";
-    model.classList.add(position);
-    model.setAttribute("alt", `${modelOptions[modelIndex].dataset.model} model preview`);
+
+    if (categoryOf(option) !== category) {
+      model.classList.add("is-away");
+      return;
+    }
+    const slot = items.indexOf(option);
+    // Fanned out like weapons on a rack while the category is closed.
+    const fan = slot - (items.length - 1) / 2;
+    model.style.setProperty("--gather-x", `${fan * 22}%`);
+    model.style.setProperty("--gather-r", `${fan * 14}deg`);
+    if (!open) {
+      model.classList.add("is-gathered");
+      return;
+    }
+    // The models sit on a ring: one in the centre, one to each side and (with four or more) the rest
+    // waiting out of sight on the far side, sliding in as the carousel turns.
+    const distance = (slot - position + items.length) % items.length;
+    model.classList.add(distance === 0 ? "is-center" : distance === 1 ? "is-right" : distance === items.length - 1 ? "is-left" : "is-far");
   });
 }
+
+function setCategoryOpen(category, open) {
+  categories.forEach((item) => {
+    const isOpen = open && item === category;
+    item.classList.toggle("is-open", isOpen);
+    item.querySelector(".category-toggle").setAttribute("aria-expanded", String(isOpen));
+    item.querySelector(".category-items").inert = !isOpen;
+  });
+  openCategory = open ? category : null;
+  modelSelection.classList.toggle("is-category-open", open);
+  if (!open) setStageLabel("Category", category.querySelector(".category-name").textContent);
+
+  // Show the open category around its selected model (or its first one), otherwise bundle it up.
+  const selected = modelOptions[selectedIndex];
+  const target = categoryOf(selected) === category ? selected : optionsIn(category)[0];
+  updateCarousel([...modelOptions].indexOf(target));
+}
+
+categories.forEach((category) => {
+  category.querySelector(".category-toggle").addEventListener("click", () => {
+    setCategoryOpen(category, openCategory !== category);
+  });
+});
+
+// Clicking the bundled models opens their category too.
+document.querySelector(".model-window")?.addEventListener("click", () => {
+  if (!openCategory) setCategoryOpen(categoryOf(modelOptions[selectedIndex]), true);
+});
 
 function highlightModel(option, highlighted) {
   option.classList.toggle("is-active", highlighted);
@@ -312,7 +374,9 @@ modelOptions.forEach((option, index) => {
 });
 
 // Hovering previews other models; moving off the list brings back the selected one.
-document.querySelector(".model-list")?.addEventListener("mouseleave", () => updateCarousel(selectedIndex));
+document.querySelectorAll(".model-list").forEach((list) => {
+  list.addEventListener("mouseleave", () => updateCarousel(selectedIndex));
+});
 
 function openDetail() {
   pageScrollLocked = false;
