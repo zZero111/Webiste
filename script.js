@@ -282,7 +282,6 @@ function selectModel(option, index) {
   viewModelImage.classList.toggle("is-hidden", is3D);
   viewWireframe.classList.toggle("is-hidden", !is3D);
   viewWireframeImage.classList.toggle("is-hidden", is3D);
-  detailModelImage.classList.toggle("is-thinking", index === 2);
   detailModelImage.classList.remove("is-wireframe");
   rotation = 0;
   detailModelImage.style.transform = "";

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="Images/scythe-model.js" defer></script>
     <script src="Images/mace-model.js" defer></script>
+    <script src="Images/dragon-sword-model.js" defer></script>
     <script src="script.js" defer></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
   </head>
@@ -49,8 +50,8 @@
             <button class="model-option" type="button" data-model="Mace" data-image="Images/mace.glb" data-wireframe="Images/mace.glb" aria-pressed="false">
               <span>Mace</span>
             </button>
-            <button class="model-option" type="button" data-model="Thinking face" data-image="Images/Thinking-face.png" data-wireframe="Images/Thinking-face-wireframe.png" aria-pressed="false">
-              <span>Thinking face</span>
+            <button class="model-option" type="button" data-model="Dragon sword" data-image="Images/dragon-sword.glb" data-wireframe="Images/dragon-sword.glb" aria-pressed="false">
+              <span>Dragon sword</span>
             </button>
           </div>
           <p class="menu-hint"><span class="hint-pointer">Hover to preview · click to explore</span><span class="hint-touch">Tap a model to explore</span></p>
@@ -61,7 +62,7 @@
             <p class="stage-name" aria-live="polite">Scythe</p>
           </div>
           <div class="model-window">
-            <img class="carousel-model is-left" data-index="2" src="Images/Thinking-face.png" alt="Thinking face model preview" />
+            <model-viewer class="carousel-model is-left" data-index="2" src="Images/dragon-sword.glb" alt="Dragon sword model preview" tabindex="-1" loading="eager"></model-viewer>
             <model-viewer class="carousel-model is-center" data-index="0" src="Images/scythe.glb" alt="Scythe model preview" tabindex="-1" loading="eager"></model-viewer>
             <model-viewer class="carousel-model is-right" data-index="1" src="Images/mace.glb" alt="Mace model preview" tabindex="-1" loading="eager"></model-viewer>
           </div>
@@ -79,7 +80,7 @@
             </div>
             <div class="detail-stage">
               <model-viewer class="detail-model" src="Images/scythe.glb" alt="Scythe model" loading="eager" camera-controls camera-orbit="0deg 75deg 135%" min-camera-orbit="auto auto 20%" max-camera-orbit="auto auto 140%" disable-zoom disable-pan touch-action="pan-y" interaction-prompt="none" shadow-intensity="1"></model-viewer>
-              <img class="detail-model-image is-hidden" src="Images/Thinking-face.png" alt="Thinking face model" draggable="false" />
+              <img class="detail-model-image is-hidden" alt="" draggable="false" />
               <button class="wireframe-toggle" type="button" aria-pressed="false">Wireframe</button>
             </div>
           </div>
@@ -91,12 +92,12 @@
             <div class="views-grid">
               <figure class="model-view model-view-main">
                 <model-viewer class="view-model-3d" src="Images/scythe.glb" alt="Scythe rendered view" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
-                <img class="view-model-image is-hidden" src="Images/Thinking-face.png" alt="Thinking face rendered view" />
+                <img class="view-model-image is-hidden" alt="" />
                 <figcaption>Rendered view</figcaption>
               </figure>
               <figure class="model-view model-view-wireframe">
                 <model-viewer class="view-wireframe-3d" src="Images/scythe.glb" alt="Scythe wireframe view" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
-                <img class="view-wireframe-image is-hidden" src="Images/Thinking-face-wireframe.png" alt="Thinking face wireframe view" />
+                <img class="view-wireframe-image is-hidden" alt="" />
                 <figcaption>Wireframe view</figcaption>
               </figure>
             </div>

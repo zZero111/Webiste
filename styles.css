@@ -260,7 +260,6 @@ body.is-detail-active { overflow: hidden; }
 
 .is-hidden { display: none !important; }
 
-.detail-model-image.is-thinking { width: min(60%, 520px); }
 
 .detail-model-image.is-dragging { cursor: grabbing; }
 
@@ -521,7 +520,6 @@ body.is-detail-active { overflow: hidden; }
   .detail-copy h2 { font-size: 4.5rem; }
   .detail-stage { min-height: 0; }
   .detail-model-image { max-height: 68%; max-width: 82%; }
-  .detail-model-image.is-thinking { width: 80%; }
   .wireframe-toggle { bottom: 18px; right: 8vw; }
   .model-views { height: auto; min-height: 100svh; padding: 70px 5vw 90px; }
   .views-grid { grid-template-columns: 1fr; }
