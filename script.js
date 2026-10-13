@@ -74,6 +74,83 @@ document.querySelectorAll("model-viewer").forEach((viewer) => {
   viewer.addEventListener("error", (event) => console.error("Model failed to load:", viewer.getAttribute("src"), event.detail));
 });
 
+// A soft oval shadow on the floor under a 3D model. model-viewer's own shadows fall straight down and
+// fade with height, which leaves only a faint line under a tall, thin model like the scythe. This draws
+// a wider grounding shadow behind the canvas and keeps it under the model's base as it is rotated,
+// tilted and zoomed. It fades out when the camera looks steeply down on, or up at, the floor.
+function addGroundShadow(viewer) {
+  const container = viewer.parentElement;
+  const shadow = document.createElement("div");
+  shadow.className = "ground-shadow";
+  shadow.setAttribute("aria-hidden", "true");
+  viewer.before(shadow);
+
+  let floorPoint = null;
+  let footprint = 0;
+  let frame;
+
+  const place = () => {
+    frame = undefined;
+    const orbit = viewer.getCameraOrbit?.();
+    const target = viewer.getCameraTarget?.();
+    const rect = viewer.getBoundingClientRect();
+    if (!floorPoint || !orbit || !target || !rect.height) return;
+
+    // Camera position and axes from the orbit (theta around the vertical axis, phi down from the top).
+    const sinPhi = Math.sin(orbit.phi);
+    const dir = [sinPhi * Math.sin(orbit.theta), Math.cos(orbit.phi), sinPhi * Math.cos(orbit.theta)];
+    const camera = [target.x + dir[0] * orbit.radius, target.y + dir[1] * orbit.radius, target.z + dir[2] * orbit.radius];
+    const rightLength = Math.hypot(dir[2], dir[0]) || 1;
+    const right = [dir[2] / rightLength, 0, -dir[0] / rightLength];
+    const up = [
+      dir[1] * right[2] - dir[2] * right[1],
+      dir[2] * right[0] - dir[0] * right[2],
+      dir[0] * right[1] - dir[1] * right[0],
+    ];
+    const toPoint = [floorPoint.x - camera[0], floorPoint.y - camera[1], floorPoint.z - camera[2]];
+    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const depth = -dot(toPoint, dir);
+    if (depth <= 0) return;
+
+    // Project the floor point onto the viewer, then convert to the container's coordinates.
+    const halfHeight = Math.tan((viewer.getFieldOfView() * Math.PI / 180) / 2) * depth;
+    const pixelsPerUnit = rect.height / (2 * halfHeight);
+    const box = container.getBoundingClientRect();
+    const x = rect.left - box.left + rect.width / 2 + dot(toPoint, right) * pixelsPerUnit;
+    const y = rect.top - box.top + rect.height / 2 - dot(toPoint, up) * pixelsPerUnit;
+    const width = footprint * pixelsPerUnit;
+
+    // Full strength from the usual side-on views, fading out when looking steeply down or from below.
+    const tilt = orbit.phi * 180 / Math.PI;
+    const strength = Math.min(1, Math.max(0, (tilt - 40) / 25), Math.max(0, (105 - tilt) / 15));
+
+    shadow.style.left = `${x}px`;
+    shadow.style.top = `${y}px`;
+    shadow.style.width = `${width}px`;
+    shadow.style.height = `${width * Math.max(0.16, Math.abs(Math.cos(orbit.phi)))}px`;
+    shadow.style.setProperty("--shadow-strength", strength.toFixed(3));
+    shadow.classList.add("is-ready");
+  };
+  const queuePlace = () => {
+    if (frame === undefined) frame = requestAnimationFrame(place);
+  };
+
+  const measure = () => {
+    const centre = viewer.getBoundingBoxCenter();
+    const size = viewer.getDimensions();
+    floorPoint = { x: centre.x, y: centre.y - size.y / 2, z: centre.z };
+    footprint = Math.max(size.x, size.z) * 0.8;
+    queuePlace();
+  };
+
+  viewer.addEventListener("load", measure);
+  viewer.addEventListener("camera-change", queuePlace);
+  window.addEventListener("resize", queuePlace);
+  if (viewer.loaded) measure();
+}
+
+document.querySelectorAll(".hero-art model-viewer, .detail-model, .view-model-3d").forEach(addGroundShadow);
+
 let pageScrollLocked = false;
 let touchStartY = 0;
 let goToPage = null;
@@ -273,6 +350,10 @@ function applyModelZoom() {
   const orbit = detailModel.getCameraOrbit?.();
   if (!orbit) return;
   detailModel.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${(modelZoom * 135).toFixed(1)}%`;
+  applyModelTarget();
+}
+
+function applyModelTarget() {
   if (defaultTarget) {
     const x = defaultTarget.x + modelPan.x;
     const y = defaultTarget.y + modelPan.y;
@@ -327,10 +408,13 @@ function setModelZoom(newZoom, clientX, clientY) {
   applyModelZoom();
 }
 
+// Opening a model starts from its default view: front-on, fully zoomed out.
 function resetModelZoom() {
   modelZoom = 1;
   modelPan = { x: 0, y: 0, z: 0 };
-  if (detailModel.loaded) applyModelZoom();
+  if (!detailModel.loaded) return;
+  detailModel.cameraOrbit = "0deg 75deg 135%";
+  applyModelTarget();
 }
 
 // Remember the framing the viewer chose for the model, once it has loaded.

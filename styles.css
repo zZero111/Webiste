@@ -85,7 +85,9 @@ body.is-detail-active { overflow: hidden; }
 .hero-art model-viewer {
   display: block;
   height: 100%;
+  position: relative;
   width: 100%;
+  z-index: 1;
 }
 
 .hero-intro {
@@ -245,6 +247,7 @@ body.is-detail-active { overflow: hidden; }
   inset: 0;
   position: absolute;
   width: 100%;
+  z-index: 1;
 }
 
 .detail-model-image {
@@ -259,6 +262,21 @@ body.is-detail-active { overflow: hidden; }
 }
 
 .is-hidden { display: none !important; }
+
+/* Soft floor shadow drawn behind a 3D model (positioned by addGroundShadow in script.js). */
+.ground-shadow {
+  background: radial-gradient(closest-side, rgba(14, 4, 30, .55), rgba(14, 4, 30, .28) 55%, rgba(14, 4, 30, 0));
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+.ground-shadow.is-ready { opacity: var(--shadow-strength, 1); }
+.ground-shadow:has(+ .is-hidden),
+.ground-shadow:has(+ [data-wireframe="true"]) { display: none; }
 
 .detail-model-image.is-star { max-height: 91%; max-width: 91%; }
 .detail-model-image.is-thinking { width: min(60%, 520px); }
@@ -357,7 +375,9 @@ body.is-detail-active { overflow: hidden; }
 .model-view model-viewer {
   display: block;
   height: 100%;
+  position: relative;
   width: 100%;
+  z-index: 1;
 }
 
 .view-model-image, .view-wireframe-image {
