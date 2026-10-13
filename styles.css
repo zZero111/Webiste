@@ -364,6 +364,20 @@ body.is-detail-active { overflow: hidden; }
   width: 100%;
 }
 
+/* Three fixed views per panel: two three-quarter views stacked on the left, the main view on the right. */
+.angle-grid {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100%;
+  width: 100%;
+}
+
+.angle-grid model-viewer { min-height: 0; min-width: 0; }
+.angle-top { grid-column: 1; grid-row: 1; }
+.angle-bottom { grid-column: 1; grid-row: 2; }
+.angle-main { grid-column: 2; grid-row: 1 / span 2; }
+
 .view-model-image, .view-wireframe-image {
   height: 100%;
   object-fit: contain;

@@ -11,9 +11,10 @@ const modelMaterials = document.querySelector(".model-materials");
 const detailTitle = document.querySelector("#detail-title");
 const detailModel = document.querySelector(".detail-model");
 const detailModelImage = document.querySelector(".detail-model-image");
-const viewModel = document.querySelector(".view-model-3d");
+// Page 4: the model from fixed angles (front, back and three-quarter views of each).
+const angleGrids = document.querySelectorAll(".angle-grid");
+const angleViews = document.querySelectorAll(".view-angle");
 const viewModelImage = document.querySelector(".view-model-image");
-const viewWireframe = document.querySelector(".view-wireframe-3d");
 const viewWireframeImage = document.querySelector(".view-wireframe-image");
 const detailBack = document.querySelector(".detail-back");
 const wireframeToggle = document.querySelector(".wireframe-toggle");
@@ -179,7 +180,7 @@ function addCastShadow(viewer) {
   if (viewer.loaded) build();
 }
 
-document.querySelectorAll(".hero-art model-viewer, .detail-model, .view-model-3d").forEach(addCastShadow);
+document.querySelectorAll(".hero-art model-viewer, .detail-model, .view-angle").forEach(addCastShadow);
 
 let pageScrollLocked = false;
 let touchStartY = 0;
@@ -260,13 +261,12 @@ function selectModel(option, index) {
   const is3D = isModelFile(option.dataset.image);
   if (is3D) {
     setModelSrc(detailModel, option.dataset.image);
-    setModelSrc(viewModel, option.dataset.image);
-    setModelSrc(viewWireframe, option.dataset.wireframe);
+    angleViews.forEach((view) => {
+      setModelSrc(view, option.dataset.image);
+      view.setAttribute("alt", `${option.dataset.model} ${view.dataset.label}`);
+    });
     detailModel.setAttribute("alt", `${option.dataset.model} model`);
-    viewModel.setAttribute("alt", `${option.dataset.model} rendered view`);
-    viewWireframe.setAttribute("alt", `${option.dataset.model} wireframe view`);
     setModelWireframe(detailModel, false);
-    setModelWireframe(viewWireframe, true);
   } else {
     detailModelImage.src = option.dataset.image;
     detailModelImage.alt = `${option.dataset.model} model`;
@@ -279,9 +279,8 @@ function selectModel(option, index) {
   detailModelImage.dataset.wireframeImage = option.dataset.wireframe;
   detailModel.classList.toggle("is-hidden", !is3D);
   detailModelImage.classList.toggle("is-hidden", is3D);
-  viewModel.classList.toggle("is-hidden", !is3D);
+  angleGrids.forEach((grid) => grid.classList.toggle("is-hidden", !is3D));
   viewModelImage.classList.toggle("is-hidden", is3D);
-  viewWireframe.classList.toggle("is-hidden", !is3D);
   viewWireframeImage.classList.toggle("is-hidden", is3D);
   detailModelImage.classList.remove("is-wireframe");
   rotation = 0;

@@ -95,15 +95,23 @@
               <h3 id="views-title">Model details</h3>
             </div>
             <div class="views-grid">
-              <figure class="model-view model-view-main">
-                <model-viewer class="view-model-3d" src="Images/scythe.glb" alt="Scythe rendered view" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+              <figure class="model-view model-view-front">
+                <div class="angle-grid">
+                  <model-viewer class="view-angle angle-top" src="Images/scythe.glb" alt="Scythe front three-quarter view from the left" data-label="front three-quarter view from the left" camera-orbit="-45deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                  <model-viewer class="view-angle angle-bottom" src="Images/scythe.glb" alt="Scythe front three-quarter view from the right" data-label="front three-quarter view from the right" camera-orbit="45deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                  <model-viewer class="view-angle angle-main" src="Images/scythe.glb" alt="Scythe front view" data-label="front view" camera-orbit="0deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                </div>
                 <img class="view-model-image is-hidden" alt="" />
-                <figcaption>Rendered view</figcaption>
+                <figcaption>Front</figcaption>
               </figure>
-              <figure class="model-view model-view-wireframe">
-                <model-viewer class="view-wireframe-3d" src="Images/scythe.glb" alt="Scythe wireframe view" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+              <figure class="model-view model-view-back">
+                <div class="angle-grid">
+                  <model-viewer class="view-angle angle-top" src="Images/scythe.glb" alt="Scythe back three-quarter view from the left" data-label="back three-quarter view from the left" camera-orbit="225deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                  <model-viewer class="view-angle angle-bottom" src="Images/scythe.glb" alt="Scythe back three-quarter view from the right" data-label="back three-quarter view from the right" camera-orbit="135deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                  <model-viewer class="view-angle angle-main" src="Images/scythe.glb" alt="Scythe back view" data-label="back view" camera-orbit="180deg 75deg 105%" tabindex="-1" loading="eager" interaction-prompt="none" shadow-intensity="1"></model-viewer>
+                </div>
                 <img class="view-wireframe-image is-hidden" alt="" />
-                <figcaption>Wireframe view</figcaption>
+                <figcaption>Back</figcaption>
               </figure>
             </div>
           </section>
