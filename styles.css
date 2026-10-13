@@ -508,6 +508,15 @@ body.is-detail-active { overflow: hidden; }
   z-index: 1;
 }
 
+/* The model waiting on the far side of the ring: tucked out of sight behind the centre one. */
+.carousel-model.is-far {
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(.2) rotateY(0deg);
+  z-index: 0;
+}
+
 @media (max-width: 700px) {
   .site-header { padding: 20px 5vw; }
   .hero { grid-template-columns: 1fr; padding: 90px 8vw 45px; }
@@ -521,7 +530,7 @@ body.is-detail-active { overflow: hidden; }
   .model-selection { grid-template-columns: 1fr; }
   .model-menu { min-height: 45svh; padding: 90px 10vw 45px; }
   .model-menu h2 { margin-bottom: 28px; }
-  .model-list { gap: 12px; grid-template-columns: repeat(3, 1fr); }
+  .model-list { gap: 12px 16px; grid-template-columns: repeat(2, 1fr); }
   .model-option > span { font-size: 1.45rem; }
   .menu-hint { margin-top: 35px; }
   .model-stage { min-height: 55svh; }

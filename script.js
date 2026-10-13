@@ -242,7 +242,10 @@ function updateCarousel(index) {
       model.src = image;
     }
     model.className = "carousel-model";
-    model.classList.add(distance === 0 ? "is-center" : distance === 1 ? "is-right" : "is-left");
+    // The models sit on a ring: one in the centre, one to each side and (with four) one waiting out of
+    // sight on the far side, which slides in as the carousel turns.
+    const position = distance === 0 ? "is-center" : distance === 1 ? "is-right" : distance === modelOptions.length - 1 ? "is-left" : "is-far";
+    model.classList.add(position);
     model.setAttribute("alt", `${modelOptions[modelIndex].dataset.model} model preview`);
   });
 }
