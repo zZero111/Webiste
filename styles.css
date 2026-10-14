@@ -236,6 +236,19 @@ body.is-detail-active { overflow: hidden; }
 
 .is-hidden { display: none !important; }
 
+/* model-viewer shows a thin dark loading bar while a model loads, which flashed up above each model
+   and then faded. Hide it (the models are small and load in an instant). */
+model-viewer {
+  --progress-bar-color: transparent;
+  --progress-bar-height: 0px;
+  --progress-mask: transparent;
+}
+
+model-viewer::part(default-progress-bar),
+model-viewer::part(default-progress-mask) {
+  display: none;
+}
+
 
 .detail-model-image.is-dragging { cursor: grabbing; }
 
