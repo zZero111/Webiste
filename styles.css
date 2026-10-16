@@ -152,11 +152,6 @@ body.is-detail-active { overflow: hidden; }
   position: relative;
 }
 
-/* ==========================================================================
-   PERSONA 5 STYLE DRAMATIC TRANSITION
-   ========================================================================== */
-
-/* 1. The Main Overlay: Rockets up from the bottom, slightly rotated and scaled down */
 .js .model-detail {
   display: block;
   inset: 0;
@@ -165,51 +160,14 @@ body.is-detail-active { overflow: hidden; }
   overscroll-behavior: contain;
   pointer-events: none;
   position: fixed;
-  transform-origin: bottom center;
-  /* Start way down, heavily scaled, and rotated */
-  transform: translateY(100%) scale(0.7) rotate(6deg);
-  /* Aggressive Expo-out easing for a snappy entrance */
-  transition: transform 0.65s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
+  transition: opacity .25s ease;
   z-index: 10;
 }
 
 .js body.is-detail-active .model-detail {
   opacity: 1;
   pointer-events: auto;
-  /* "none" rather than an identity transform, which would turn these into containing blocks and move the
-     absolutely positioned "Programs used" box out of its corner. */
-  transform: none;
 }
-
-/* 2. The Text: Flies in from the left with a heavy skew */
-.detail-copy {
-  opacity: 0;
-  transform-origin: left center;
-  transform: translateX(-80px) skewX(-25deg);
-  transition: transform 0.45s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
-}
-
-body.is-detail-active .detail-copy {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.25s;
-}
-
-/* 3. The 3D Model Stage: Flies in from the right, heavily scaled down and rotated */
-.detail-stage {
-  opacity: 0;
-  transform-origin: right center;
-  transform: translateX(80px) scale(0.4) rotate(-15deg);
-  transition: transform 0.55s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
-}
-
-body.is-detail-active .detail-stage {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.35s;
-}
-
-/* ========================================================================== */
 
 .detail-page { min-height: 100%; }
 
@@ -763,11 +721,4 @@ model-viewer::part(default-progress-mask) {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  /* Fallback for accessibility - strip out the dramatic transforms */
-  .js .model-detail,
-  .detail-copy,
-  .detail-stage {
-    transition: opacity 0.2s ease !important;
-    transform: none !important;
-  }
 }

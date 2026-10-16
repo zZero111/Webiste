@@ -385,8 +385,7 @@ document.querySelectorAll(".model-list").forEach((list) => {
 });
 
 // A Persona-style transition: slanted bands of colour sweep across the screen, the model's name is
-// slammed on top, and the next page is switched in behind the bands, which then sweep away to reveal
-// it (the page's own fly-in animation is in styles.css under "PERSONA 5 STYLE DRAMATIC TRANSITION"). Works for
+// slammed on top, and the next page is switched in behind the bands before they sweep away. Works for
 // any model: it only needs a name, and optionally a category and an accent colour (data-accent on the
 // model's menu button) for the stripes and name plate.
 const personaTransition = document.querySelector(".persona-transition");
@@ -411,9 +410,9 @@ async function playModelTransition({ name, category = "", accent }, onCovered) {
   await frame();
   personaTransition.classList.add("is-covering");   // bands sweep in, name slams down
   await wait(1000);
-  onCovered();                                       // the new page starts flying in behind the bands...
-  await wait(420);
-  personaTransition.classList.add("is-leaving");    // ...and the bands sweep away to reveal it mid-flight
+  onCovered();                                       // switch pages while the screen is covered
+  await wait(120);
+  personaTransition.classList.add("is-leaving");    // bands sweep away, revealing the new page
   await wait(760);
 
   personaTransition.classList.remove("is-active", "is-covering", "is-leaving");
