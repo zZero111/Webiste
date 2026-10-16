@@ -176,7 +176,9 @@ body.is-detail-active { overflow: hidden; }
 .js body.is-detail-active .model-detail {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0) scale(1) rotate(0deg);
+  /* "none" rather than an identity transform, which would turn these into containing blocks and move the
+     absolutely positioned "Programs used" box out of its corner. */
+  transform: none;
 }
 
 /* 2. The Text: Flies in from the left with a heavy skew */
@@ -189,7 +191,7 @@ body.is-detail-active { overflow: hidden; }
 
 body.is-detail-active .detail-copy {
   opacity: 1;
-  transform: translateX(0) skewX(0deg);
+  transform: none;
   transition-delay: 0.25s;
 }
 
@@ -203,7 +205,7 @@ body.is-detail-active .detail-copy {
 
 body.is-detail-active .detail-stage {
   opacity: 1;
-  transform: translateX(0) scale(1) rotate(0deg);
+  transform: none;
   transition-delay: 0.35s;
 }
 
