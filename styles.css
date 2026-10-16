@@ -153,6 +153,9 @@ body.is-detail-active { overflow: hidden; }
   position: relative;
 }
 
+/* --- Persona Transition Additions --- */
+
+/* Base state for the detail overlay: pushed down and slightly scaled down */
 .js .model-detail {
   display: block;
   inset: 0;
@@ -161,16 +164,46 @@ body.is-detail-active { overflow: hidden; }
   overscroll-behavior: contain;
   pointer-events: none;
   position: fixed;
-  transform: translateY(0);
-  transition: opacity .25s ease;
+  /* Snappy, dramatic ease curve */
+  transform: translateY(100%) scale(0.98);
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.6s ease;
   z-index: 10;
 }
 
+/* Active state: slides up into place */
 .js body.is-detail-active .model-detail {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
+
+/* Inner elements start hidden, pushed down, and slightly rotated */
+.detail-copy,
+.detail-stage {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Add a slight dramatic tilt to the 3D model stage */
+.detail-stage {
+  transform: translateY(50px) rotate(2deg);
+}
+
+/* Staggered reveal: text comes in first, then the 3D model */
+body.is-detail-active .detail-copy {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.4s;
+}
+
+body.is-detail-active .detail-stage {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+  transition-delay: 0.5s;
+}
+
+/* --- End Persona Transition Additions --- */
 
 .detail-page { min-height: 100%; }
 
@@ -235,6 +268,19 @@ body.is-detail-active { overflow: hidden; }
 }
 
 .is-hidden { display: none !important; }
+
+/* model-viewer shows a thin dark loading bar while a model loads, which flashed up above each model
+   and then faded. Hide it (the models are small and load in an instant). */
+model-viewer {
+  --progress-bar-color: transparent;
+  --progress-bar-height: 0px;
+  --progress-mask: transparent;
+}
+
+model-viewer::part(default-progress-bar),
+model-viewer::part(default-progress-mask) {
+  display: none;
+}
 
 
 .detail-model-image.is-dragging { cursor: grabbing; }
@@ -619,4 +665,11 @@ body.is-detail-active { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  /* Disable the new transitions for users who prefer reduced motion */
+  .js .model-detail,
+  .detail-copy,
+  .detail-stage {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
 }
