@@ -359,6 +359,7 @@ modelOptions.forEach((option, index) => {
   option.addEventListener("mouseenter", () => {
     highlightModel(option, true);
     updateCarousel(index);
+    primeTransitionModel(option.dataset.image);
   });
   option.addEventListener("mouseleave", () => highlightModel(option, false));
   option.addEventListener("focus", () => {
@@ -375,6 +376,7 @@ modelOptions.forEach((option, index) => {
       name: option.dataset.model,
       category: categoryOf(option)?.dataset.category ?? "",
       accent: option.dataset.accent,
+      image: option.dataset.image,
     }, openDetail);
   });
 });
@@ -394,7 +396,31 @@ let transitionPlaying = false;
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 const frame = () => new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
 
-async function playModelTransition({ name, category = "", accent }, onCovered) {
+// The transition also shows the model being opened beside its name. Its viewer is loaded ahead of time
+// (when the model is hovered or focused in the menu) so it is ready by the time the name slams in.
+const transitionViewer = personaTransition?.querySelector(".pt-model");
+const transitionImage = personaTransition?.querySelector(".pt-image");
+
+let transitionViewerTidied = false;
+
+function primeTransitionModel(src) {
+  if (!transitionViewer || !src) return;
+  // This viewer is decorative (the overlay is aria-hidden). Its hidden screen-reader text updates as the
+  // model turns, and the white outline filter in styles.css would turn that tiny text into a visible dash.
+  if (!transitionViewerTidied && transitionViewer.shadowRoot) {
+    const style = document.createElement("style");
+    style.textContent = ".screen-reader-only { display: none !important; }";
+    transitionViewer.shadowRoot.append(style);
+    transitionViewerTidied = true;
+  }
+  const is3D = isModelFile(src);
+  transitionViewer.classList.toggle("is-hidden", !is3D);
+  transitionImage.classList.toggle("is-hidden", is3D);
+  if (is3D) setModelSrc(transitionViewer, src);
+  else transitionImage.src = src;
+}
+
+async function playModelTransition({ name, category = "", accent, image }, onCovered) {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!personaTransition || reduceMotion) {
     onCovered();
@@ -405,6 +431,8 @@ async function playModelTransition({ name, category = "", accent }, onCovered) {
   personaTransition.querySelector(".pt-name").textContent = name;
   personaTransition.querySelector(".pt-category").textContent = category;
   personaTransition.style.setProperty("--pt-accent", accent || "var(--yellow)");
+  primeTransitionModel(image);
+  personaTransition.classList.toggle("has-figure", Boolean(image));
 
   personaTransition.classList.add("is-active");
   await frame();
@@ -415,7 +443,7 @@ async function playModelTransition({ name, category = "", accent }, onCovered) {
   personaTransition.classList.add("is-leaving");    // bands sweep away, revealing the new page
   await wait(760);
 
-  personaTransition.classList.remove("is-active", "is-covering", "is-leaving");
+  personaTransition.classList.remove("is-active", "is-covering", "is-leaving", "has-figure");
   transitionPlaying = false;
 }
 

@@ -651,6 +651,60 @@ model-viewer::part(default-progress-mask) {
 .persona-transition.is-covering .pt-title { animation: pt-slam .42s .34s cubic-bezier(.2, 1.3, .3, 1) both; }
 .persona-transition.is-leaving .pt-title { animation: pt-out .4s ease-in both; }
 
+/* The model beside its name: it bursts in from the right a beat after the name, over a slanted purple
+   panel, and leaves with it. With a model showing, the name moves left and shrinks to make room. */
+.pt-figure {
+  height: 88vh;
+  opacity: 0;
+  position: absolute;
+  right: 5vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38vw;
+}
+
+.pt-figure::before {
+  background: linear-gradient(160deg, #7a4cc9, #4d2a85 70%);
+  border-left: 1.1vw solid #fff;
+  bottom: 6%;
+  box-shadow: 1.4vmin 1.4vmin 0 rgba(0, 0, 0, .45);
+  content: "";
+  left: 10%;
+  position: absolute;
+  right: 10%;
+  top: 6%;
+  transform: skewX(-18deg);
+}
+
+.pt-model, .pt-image {
+  display: block;
+  /* A thin white outline (like a sticker) so dark models still stand out, plus a hard shadow. */
+  filter: url(#pt-sticker) drop-shadow(1.2vmin 1.6vmin 0 rgba(0, 0, 0, .45));
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  width: 100%;
+}
+
+.persona-transition:not(.has-figure) .pt-figure { display: none; }
+.persona-transition.has-figure .pt-title { left: 36%; max-width: 62vw; }
+.persona-transition.has-figure .pt-name { font-size: clamp(2.6rem, 7.2vw, 6.5rem); }
+.persona-transition.has-figure .pt-category { margin-left: -7vmin; }
+
+.persona-transition.is-covering .pt-figure { animation: pt-figure-in .55s .5s cubic-bezier(.2, 1.2, .3, 1) both; }
+.persona-transition.is-leaving .pt-figure { animation: pt-figure-out .4s ease-in both; }
+
+@keyframes pt-figure-in {
+  0% { opacity: 0; transform: translate(40vw, -50%) rotate(12deg) scale(.6); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(-50%); }
+}
+
+@keyframes pt-figure-out {
+  from { opacity: 1; transform: translateY(-50%); }
+  to { opacity: 0; transform: translate(30vw, -50%) rotate(8deg) scale(1.15); }
+}
+
 @keyframes pt-slam {
   0% { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(3); }
   55% { opacity: 1; transform: translate(-50%, -50%) rotate(-4deg) scale(.94); }
@@ -673,6 +727,11 @@ model-viewer::part(default-progress-mask) {
 @media (max-width: 700px) {
   .pt-category { margin-left: -4vmin; }
   .pt-name { font-size: 11vw; padding: .08em .35em .12em; }
+  /* On phones the model sits above its name instead of beside it. */
+  .pt-figure { height: 50vh; left: 6vw; right: 6vw; top: 31%; width: auto; }
+  .persona-transition.has-figure .pt-title { left: 50%; max-width: 92vw; top: 70%; }
+  .persona-transition.has-figure .pt-name { font-size: 9.5vw; }
+  .persona-transition.has-figure .pt-category { margin-left: -4vmin; }
 }
 
 @media (max-width: 700px) {

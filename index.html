@@ -10,12 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap" />
     <!-- The ?v= number makes browsers fetch fresh copies after an update; change it whenever these files change. -->
-    <link rel="stylesheet" href="styles.css?v=20261016-5" />
+    <link rel="stylesheet" href="styles.css?v=20261017-4" />
     <script src="Images/scythe-model.js" defer></script>
     <script src="Images/mace-model.js" defer></script>
     <script src="Images/dragon-sword-model.js" defer></script>
     <script src="Images/devil-sword-model.js" defer></script>
-    <script src="script.js?v=20261016-5" defer></script>
+    <script src="script.js?v=20261017-4" defer></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
   </head>
   <body>
@@ -149,6 +149,24 @@
       <div class="pt-title">
         <p class="pt-category"></p>
         <p class="pt-name"></p>
+      </div>
+      <!-- A white sticker outline for the model below. Only solid pixels are outlined, so the viewer's nearly
+           invisible helper shapes (which appear as stray dashes while the model turns) are ignored. -->
+      <svg width="0" height="0" style="position:absolute" focusable="false">
+        <filter id="pt-sticker" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+          <feComponentTransfer in="SourceAlpha" result="solid">
+            <feFuncA type="discrete" tableValues="0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"/>
+          </feComponentTransfer>
+          <feMorphology in="solid" operator="dilate" radius="3" result="grown"/>
+          <feFlood flood-color="#fff" result="white"/>
+          <feComposite in="white" in2="grown" operator="in" result="outline"/>
+          <feMerge><feMergeNode in="outline"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </svg>
+      <!-- The model being opened, shown beside its name (a live 3D model, or an image for flat models). -->
+      <div class="pt-figure">
+        <model-viewer class="pt-model" alt="" tabindex="-1" loading="eager" camera-orbit="-35deg 78deg 82%" auto-rotate auto-rotate-delay="0" rotation-per-second="50deg" interaction-prompt="none"></model-viewer>
+        <img class="pt-image is-hidden" alt="" />
       </div>
       <div class="pt-flash"></div>
     </div>
