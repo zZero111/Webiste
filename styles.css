@@ -138,7 +138,6 @@ body.is-detail-active { overflow: hidden; }
   color: var(--yellow);
   display: grid;
   grid-template-columns: minmax(265px, 25.4%) 1fr;
-  /* Exactly one screen tall (pages here change with a swipe or scroll, not by scrolling freely). */
   height: 100svh;
   min-height: 420px;
   position: relative;
@@ -153,9 +152,11 @@ body.is-detail-active { overflow: hidden; }
   position: relative;
 }
 
-/* --- Persona Transition Additions --- */
+/* ==========================================================================
+   PERSONA 5 STYLE DRAMATIC TRANSITION
+   ========================================================================== */
 
-/* Base state for the detail overlay: pushed down and slightly scaled down */
+/* 1. The Main Overlay: Rockets up from the bottom, slightly rotated and scaled down */
 .js .model-detail {
   display: block;
   inset: 0;
@@ -164,46 +165,49 @@ body.is-detail-active { overflow: hidden; }
   overscroll-behavior: contain;
   pointer-events: none;
   position: fixed;
-  /* Snappy, dramatic ease curve */
-  transform: translateY(100%) scale(0.98);
-  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.6s ease;
+  transform-origin: bottom center;
+  /* Start way down, heavily scaled, and rotated */
+  transform: translateY(100%) scale(0.7) rotate(6deg);
+  /* Aggressive Expo-out easing for a snappy entrance */
+  transition: transform 0.65s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
   z-index: 10;
 }
 
-/* Active state: slides up into place */
 .js body.is-detail-active .model-detail {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0) scale(1);
+  transform: translateY(0) scale(1) rotate(0deg);
 }
 
-/* Inner elements start hidden, pushed down, and slightly rotated */
-.detail-copy,
-.detail-stage {
+/* 2. The Text: Flies in from the left with a heavy skew */
+.detail-copy {
   opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+  transform-origin: left center;
+  transform: translateX(-80px) skewX(-25deg);
+  transition: transform 0.45s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
 }
 
-/* Add a slight dramatic tilt to the 3D model stage */
-.detail-stage {
-  transform: translateY(50px) rotate(2deg);
-}
-
-/* Staggered reveal: text comes in first, then the 3D model */
 body.is-detail-active .detail-copy {
   opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.4s;
+  transform: translateX(0) skewX(0deg);
+  transition-delay: 0.25s;
+}
+
+/* 3. The 3D Model Stage: Flies in from the right, heavily scaled down and rotated */
+.detail-stage {
+  opacity: 0;
+  transform-origin: right center;
+  transform: translateX(80px) scale(0.4) rotate(-15deg);
+  transition: transform 0.55s cubic-bezier(0.86, 0, 0.07, 1), opacity 0.4s ease;
 }
 
 body.is-detail-active .detail-stage {
   opacity: 1;
-  transform: translateY(0) rotate(0deg);
-  transition-delay: 0.5s;
+  transform: translateX(0) scale(1) rotate(0deg);
+  transition-delay: 0.35s;
 }
 
-/* --- End Persona Transition Additions --- */
+/* ========================================================================== */
 
 .detail-page { min-height: 100%; }
 
@@ -269,8 +273,6 @@ body.is-detail-active .detail-stage {
 
 .is-hidden { display: none !important; }
 
-/* model-viewer shows a thin dark loading bar while a model loads, which flashed up above each model
-   and then faded. Hide it (the models are small and load in an instant). */
 model-viewer {
   --progress-bar-color: transparent;
   --progress-bar-height: 0px;
@@ -281,7 +283,6 @@ model-viewer::part(default-progress-bar),
 model-viewer::part(default-progress-mask) {
   display: none;
 }
-
 
 .detail-model-image.is-dragging { cursor: grabbing; }
 
@@ -338,8 +339,6 @@ model-viewer::part(default-progress-mask) {
   max-width: 1400px;
 }
 
-/* Box listing the software used: top right of page 3 (the rotatable model). On phones it sits
-   beside the Back button instead, so it doesn't cover the model's name. */
 .programs-used {
   background: #211e22;
   border-radius: 14px;
@@ -412,7 +411,6 @@ model-viewer::part(default-progress-mask) {
   width: 100%;
 }
 
-/* Three fixed views per panel: two three-quarter views stacked on the left, the main view on the right. */
 .angle-grid {
   display: grid;
   grid-template-columns: 2fr 3fr;
@@ -490,7 +488,6 @@ model-viewer::part(default-progress-mask) {
 .category-name { font-size: clamp(1.7rem, 2.7vw, 3.2rem); line-height: .9; }
 .category-count { color: #b9b0bd; font-size: .75rem; letter-spacing: .14em; }
 
-/* The open/close indicator: a plus that turns into a minus. */
 .category-toggle::after {
   align-self: center;
   border: 1px solid rgba(255, 223, 62, .55);
@@ -507,7 +504,6 @@ model-viewer::part(default-progress-mask) {
 
 .category.is-open .category-toggle::after { content: "\2212"; transform: rotate(180deg); }
 
-/* The category's models unfold beneath it. */
 .category-items {
   display: grid;
   grid-template-rows: 0fr;
@@ -590,8 +586,6 @@ model-viewer::part(default-progress-mask) {
   top: 50%;
   transform-origin: center;
   backface-visibility: hidden;
-  /* Every position uses the same transform, so moving between them (including bursting out of the
-     bundle) animates smoothly. */
   transform: translate(-50%, -50%) translateX(var(--x, 0%)) rotate(var(--r, 0deg)) scale(var(--s, 1)) rotateY(var(--ry, 0deg));
   transition: left 1.1s cubic-bezier(.22,.8,.3,1), opacity .9s cubic-bezier(.22,.8,.3,1), transform 1.1s cubic-bezier(.22,.8,.3,1), filter .9s ease;
   width: 37%;
@@ -600,11 +594,7 @@ model-viewer::part(default-progress-mask) {
 .carousel-model.is-center { --s: 1.25; left: 50%; opacity: 1; z-index: 2; }
 .carousel-model.is-left { --ry: 32deg; --s: .34; left: 15%; opacity: .62; z-index: 1; }
 .carousel-model.is-right { --ry: -32deg; --s: .34; left: 85%; opacity: .62; z-index: 1; }
-
-/* A model waiting on the far side of the ring: tucked out of sight behind the centre one. */
 .carousel-model.is-far { --s: .2; left: 50%; opacity: 0; pointer-events: none; z-index: 0; }
-
-/* A closed category: its models bundled together in the middle, fanned out like a weapon rack. */
 .carousel-model.is-gathered {
   --r: var(--gather-r, 0deg);
   --s: .78;
@@ -613,8 +603,6 @@ model-viewer::part(default-progress-mask) {
   opacity: 1;
   z-index: 1;
 }
-
-/* Models from a category that isn't showing. */
 .carousel-model.is-away { --s: .2; left: 50%; opacity: 0; pointer-events: none; z-index: 0; }
 
 .model-selection:not(.is-category-open) .model-window { cursor: pointer; }
@@ -665,7 +653,7 @@ model-viewer::part(default-progress-mask) {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  /* Disable the new transitions for users who prefer reduced motion */
+  /* Fallback for accessibility - strip out the dramatic transforms */
   .js .model-detail,
   .detail-copy,
   .detail-stage {
