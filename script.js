@@ -367,9 +367,15 @@ modelOptions.forEach((option, index) => {
   });
   option.addEventListener("blur", () => highlightModel(option, false));
   option.addEventListener("click", () => {
+    if (transitionPlaying) return;
     selectModel(option, index);
     resetModelZoom();
-    openDetail();
+    // The model's page opens behind a full-screen wipe, with its name slammed across the screen.
+    playModelTransition({
+      name: option.dataset.model,
+      category: categoryOf(option)?.dataset.category ?? "",
+      accent: option.dataset.accent,
+    }, openDetail);
   });
 });
 
@@ -377,6 +383,42 @@ modelOptions.forEach((option, index) => {
 document.querySelectorAll(".model-list").forEach((list) => {
   list.addEventListener("mouseleave", () => updateCarousel(selectedIndex));
 });
+
+// A Persona-style transition: slanted bands of colour sweep across the screen, the model's name is
+// slammed on top, and the next page is switched in behind the bands, which then sweep away to reveal
+// it (the page's own fly-in animation is in styles.css under "PERSONA 5 STYLE DRAMATIC TRANSITION"). Works for
+// any model: it only needs a name, and optionally a category and an accent colour (data-accent on the
+// model's menu button) for the stripes and name plate.
+const personaTransition = document.querySelector(".persona-transition");
+let transitionPlaying = false;
+
+const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+const frame = () => new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+
+async function playModelTransition({ name, category = "", accent }, onCovered) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!personaTransition || reduceMotion) {
+    onCovered();
+    return;
+  }
+
+  transitionPlaying = true;
+  personaTransition.querySelector(".pt-name").textContent = name;
+  personaTransition.querySelector(".pt-category").textContent = category;
+  personaTransition.style.setProperty("--pt-accent", accent || "var(--yellow)");
+
+  personaTransition.classList.add("is-active");
+  await frame();
+  personaTransition.classList.add("is-covering");   // bands sweep in, name slams down
+  await wait(1000);
+  onCovered();                                       // the new page starts flying in behind the bands...
+  await wait(420);
+  personaTransition.classList.add("is-leaving");    // ...and the bands sweep away to reveal it mid-flight
+  await wait(760);
+
+  personaTransition.classList.remove("is-active", "is-covering", "is-leaving");
+  transitionPlaying = false;
+}
 
 function openDetail() {
   pageScrollLocked = false;

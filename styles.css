@@ -607,6 +607,114 @@ model-viewer::part(default-progress-mask) {
 
 .model-selection:not(.is-category-open) .model-window { cursor: pointer; }
 
+/* Model-open transition (script.js: playModelTransition). Three slanted bands sweep across the screen,
+   the model's name is slammed on top, then the bands sweep off to reveal the page. */
+.persona-transition {
+  --pt-accent: var(--yellow);
+  --pt-skew: skewX(-18deg);
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: fixed;
+  visibility: hidden;
+  z-index: 100;
+}
+
+.persona-transition.is-active { pointer-events: auto; visibility: visible; }
+
+.pt-band {
+  bottom: -15%;
+  left: 0;
+  position: absolute;
+  top: -15%;
+  transform: translateX(calc(-170vw - 24vh)) var(--pt-skew);
+  transition: transform .45s cubic-bezier(.77, 0, .18, 1);
+  width: 170vw;
+  will-change: transform;
+}
+
+.pt-purple { background: var(--purple); border-left: 1.4vw solid #fff; }
+.pt-yellow { background: var(--pt-accent); }
+.pt-black {
+  background:
+    repeating-linear-gradient(-18deg, transparent 0 22px, rgba(255, 255, 255, .045) 22px 24px),
+    #141217;
+}
+
+/* Sweeping in: the leading (purple) band first, the black one last, on top. */
+.persona-transition.is-covering .pt-band { transform: translateX(calc(-4vw - 22vh)) var(--pt-skew); }
+.persona-transition.is-covering .pt-yellow { transition-delay: .06s; }
+.persona-transition.is-covering .pt-black { transition-delay: .12s; }
+
+/* Sweeping out: the top (black) band leaves first. */
+.persona-transition.is-leaving .pt-band { transform: translateX(calc(100vw + 24vh)) var(--pt-skew); transition-duration: .5s; }
+.persona-transition.is-leaving .pt-purple { transition-delay: .12s; }
+.persona-transition.is-leaving .pt-yellow { transition-delay: .06s; }
+.persona-transition.is-leaving .pt-black { transition-delay: 0s; }
+
+.pt-title {
+  left: 50%;
+  opacity: 0;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-5deg);
+  width: max-content;
+  max-width: 90vw; /* long names wrap onto a second line instead of running off the screen */
+}
+
+.pt-category {
+  background: var(--purple);
+  color: #fff;
+  display: inline-block;
+  font-size: clamp(.8rem, 1.6vw, 1.3rem);
+  letter-spacing: .3em;
+  margin: 0 0 1.1vmin -14vmin;
+  padding: .5em 1.4em .5em 1.8em;
+  text-transform: uppercase;
+  transform: skewX(-18deg);
+}
+
+.pt-category:empty { display: none; }
+
+.pt-name {
+  background: var(--pt-accent);
+  box-shadow: .8vmin .8vmin 0 #fff, 1.6vmin 1.6vmin 0 var(--purple);
+  color: #141217;
+  font-size: clamp(3rem, 10vw, 9rem);
+  line-height: 1;
+  margin: 0;
+  padding: .08em .5em .12em;
+  transform: skewX(-18deg);
+}
+
+.persona-transition.is-covering .pt-title { animation: pt-slam .42s .34s cubic-bezier(.2, 1.3, .3, 1) both; }
+.persona-transition.is-leaving .pt-title { animation: pt-out .4s ease-in both; }
+
+@keyframes pt-slam {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(3); }
+  55% { opacity: 1; transform: translate(-50%, -50%) rotate(-4deg) scale(.94); }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
+}
+
+@keyframes pt-out {
+  from { opacity: 1; transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
+  to { opacity: 0; transform: translate(-90%, -50%) rotate(-9deg) scale(1.3); }
+}
+
+.pt-flash { background: #fff; inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.persona-transition.is-covering .pt-flash { animation: pt-flash .3s .34s ease-out forwards; }
+
+@keyframes pt-flash {
+  0% { opacity: .85; }
+  100% { opacity: 0; }
+}
+
+@media (max-width: 700px) {
+  .pt-category { margin-left: -4vmin; }
+  .pt-name { font-size: 11vw; padding: .08em .35em .12em; }
+}
+
 @media (max-width: 700px) {
   .site-header { padding: 20px 5vw; }
   .hero { grid-template-columns: 1fr; padding: 90px 8vw 45px; }
